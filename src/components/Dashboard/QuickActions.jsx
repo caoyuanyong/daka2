@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Star, Dog, HelpCircle } from "lucide-react";
+import { Trophy, Star, Dog, HelpCircle, Users } from "lucide-react";
 import Link from "next/link";
 
 export default function QuickActions() {
@@ -8,6 +8,7 @@ export default function QuickActions() {
     { label: "积分成就", icon: Trophy, color: "#F59E0B", bg: "#FEF3C7", href: "/rewards" },
     { label: "行为习惯", icon: Star, color: "#EC4899", bg: "#FCE7F3", href: "/habits" },
     { label: "电子宠物", icon: Dog, color: "#EF4444", bg: "#FEE2E2", href: "/pet" },
+    { label: "档案管理", icon: Users, color: "#8B5CF6", bg: "#EDE9FE", href: "/users" },
     { label: "使用帮助", icon: HelpCircle, color: "#3B82F6", bg: "#DBEAFE", href: "/help" },
   ];
 

@@ -20,8 +20,8 @@ export function LearningProvider({ children }) {
           const res = await fetch(`/api/plans?userId=${user.id}`);
           let dbPlans = await res.json();
 
-          // Migration: If DB is empty, migrate from localStorage
-          if (!res.ok || (Array.isArray(dbPlans) && dbPlans.length === 0)) {
+          // 2. Migration: Only if API failed and we have local backup
+          if (!res.ok) {
             const savedPlans = localStorage.getItem(`bj_plans_${user.id}`);
             if (savedPlans) {
               const localPlans = JSON.parse(savedPlans);
@@ -35,23 +35,9 @@ export function LearningProvider({ children }) {
                 const reFetch = await fetch(`/api/plans?userId=${user.id}`);
                 dbPlans = await reFetch.json();
               }
-            } else {
-              // Default seed data if no local data either
-              const today = new Date().toISOString().split('T')[0];
-              const defaultPlans = [
-                { title: "背诵英语单词", date: today, timeType: 'range', startTime: '08:00', endTime: '08:30', completed: false, category: "学习", reward: 10, userId: user.id },
-                { title: "数学练习题", date: today, timeType: 'duration', duration: 45, completed: true, category: "学习", reward: 20, userId: user.id },
-              ];
-              await fetch('/api/plans', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(defaultPlans)
-              });
-              const reFetch = await fetch(`/api/plans?userId=${user.id}`);
-              dbPlans = await reFetch.json();
             }
           }
-          setPlans(dbPlans);
+          setPlans(Array.isArray(dbPlans) ? dbPlans : []);
           setIsInitialized(true);
         } catch (error) {
           console.error('Load plans error:', error);

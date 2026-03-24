@@ -11,16 +11,6 @@ export function HabitsProvider({ children }) {
   const [records, setRecords] = useState([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initial mock data
-  const initialHabits = [
-    { title: '认真早起', icon: '☀️', color: '#F59E0B', points: 10, type: 'daily', maxTimes: 1, category: '生活', duration: 0, desc: '早上8:00前起床打卡' },
-    { title: '课外阅读', icon: '📚', color: '#3B82F6', points: 15, type: 'daily', maxTimes: 1, category: '学习', duration: 30, desc: '每天坚持阅读30分钟' },
-    { title: '整理书桌', icon: '🧹', color: '#10B981', points: 5, type: 'daily', maxTimes: 1, category: '生活', duration: 10, desc: '学习后整理桌面环境' },
-    { title: '喝足5杯水', icon: '💧', color: '#60A5FA', points: 5, type: 'daily_multiple', maxTimes: 5, category: '健康', duration: 0, desc: '补充水分，身体健康' },
-    { title: '看电视过久', icon: '📺', color: '#EF4444', points: -15, type: 'daily', maxTimes: 1, category: '生活', duration: 0, desc: '连续观看超过1小时' },
-    { title: '户外运动', icon: '🏃', color: '#10B981', points: 20, type: 'daily', maxTimes: 1, category: '运动', duration: 45, desc: '坚持每日户外运动' },
-  ];
-
   // Load from API and Migration
   useEffect(() => {
     if (appInitialized && user?.id) {
@@ -31,48 +21,40 @@ export function HabitsProvider({ children }) {
           const habitsRes = await fetch(`/api/habits?userId=${user.id}`);
           let dbHabits = await habitsRes.json();
 
-          // 2. Migration for Habits
-          if (!habitsRes.ok || (Array.isArray(dbHabits) && dbHabits.length === 0)) {
+          // 2. Migration for habits (Only if API failed and we have local backup)
+          if (!habitsRes.ok) {
             const savedHabits = localStorage.getItem(`bj_habits_${user.id}`);
-            const habitsToMigrate = savedHabits ? JSON.parse(savedHabits) : initialHabits;
-            
-            const migratedHabits = [];
-            for (const h of habitsToMigrate) {
-              const res = await fetch('/api/habits', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...h, userId: user.id })
-              });
-              if (res.ok) migratedHabits.push(await res.json());
+            if (savedHabits) {
+              const habitsToMigrate = JSON.parse(savedHabits);
+              const migratedHabits = [];
+              for (const h of habitsToMigrate) {
+                const res = await fetch('/api/habits', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ ...h, userId: user.id })
+                });
+                if (res.ok) migratedHabits.push(await res.json());
+              }
+              dbHabits = migratedHabits;
             }
-            dbHabits = migratedHabits;
           }
-          setHabits(dbHabits);
+          setHabits(Array.isArray(dbHabits) ? dbHabits : []);
 
           // 3. Fetch records from API
           const recordsRes = await fetch(`/api/records?userId=${user.id}`);
           let dbRecords = await recordsRes.json();
 
-          // 4. Migration for Records
-          if (!recordsRes.ok || (Array.isArray(dbRecords) && dbRecords.length === 0)) {
+          // 4. Migration for Records (Optional, only if API failed)
+          if (!recordsRes.ok) {
             const savedRecords = localStorage.getItem(`bj_habit_records_${user.id}`);
             if (savedRecords) {
               const recordsToMigrate = JSON.parse(savedRecords);
               const migratedRecords = [];
-              // Note: We need to match current habit IDs in DB with old habit IDs if they changed
-              // But for simplicity during migration, we assume habit titles match or we just migrate them
-              // A more robust migration would map IDs, but here we just POST them.
               for (const r of recordsToMigrate) {
-                // Find matching habit in DB by title (since IDs changed)
-                const matchingHabit = dbHabits.find(h => h.title === habits.find(oldH => oldH.id === r.habitId)?.title);
                 const res = await fetch('/api/records', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                    ...r, 
-                    userId: user.id, 
-                    habitId: matchingHabit?.id || r.habitId // fallback to old ID if not found
-                  })
+                  body: JSON.stringify({ ...r, userId: user.id })
                 });
                 if (res.ok) migratedRecords.push(await res.json());
               }

@@ -62,6 +62,11 @@ a {
   text-decoration: none;
 }
 
+html.modal-open, body.modal-open {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
 /* Base Components */
 .card {
   background: var(--bg-card);

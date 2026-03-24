@@ -15,6 +15,20 @@ export default function AIGeneratorModal({ isOpen, onClose }) {
   const { addPlan } = useLearningPlan();
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (!isOpen) {
       setPrompt('');
       setGeneratedTasks([]);

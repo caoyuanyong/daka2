@@ -1,15 +1,45 @@
 "use client";
 
 import { useApp } from "@/hooks/useAppContext";
-import { User, Gift, Zap, Ticket, ChevronDown, Users, LogOut, Settings } from "lucide-react";
+import { User, Gift, Zap, Ticket, ChevronDown, Users, LogOut, Settings, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Header() {
-  const { user, members, switchMember, family, logout } = useApp();
+  const { user, members, switchMember, family, logout, addMember } = useApp();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [loading, setLoading] = useState(false);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (isAddModalOpen) {
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    };
+  }, [isAddModalOpen]);
+
+  const handleQuickAdd = async (e) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    setLoading(true);
+    const newMember = await addMember(newName);
+    setLoading(false);
+    if (newMember) {
+      setNewName("");
+      setIsAddModalOpen(false);
+      // Wait a bit then switch? Or just let user switch.
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -43,7 +73,12 @@ export default function Header() {
         
         <div className="avatar-group-wrap" ref={menuRef}>
           <div className="avatar-group" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            <span className="user-nickname">{user.name}</span>
+            <div className="name-wrap">
+              <span className="user-nickname">{user.name}</span>
+              <Link href="/users" className="quick-manage-link" onClick={e => e.stopPropagation()}>
+                管理
+              </Link>
+            </div>
             <div className="avatar-ring">
               <img src={user.avatar} alt="Avatar" className="avatar" />
             </div>
@@ -61,7 +96,7 @@ export default function Header() {
                   position: 'absolute',
                   top: 'calc(100% + 10px)',
                   right: 0,
-                  width: '220px',
+                  width: '240px',
                   zIndex: 1000,
                   padding: '0.5rem 0',
                   overflow: 'hidden'
@@ -80,10 +115,19 @@ export default function Header() {
                       {member.id === user.id && <span className="active-dot" />}
                     </div>
                   ))}
+                  
+                  {/* Quick Add Button in Dropdown */}
+                  <div className="member-item add-btn" onClick={() => { setIsAddModalOpen(true); setIsMenuOpen(false); }}>
+                    <div className="mini-avatar add-icon">
+                      <UserRoundPlus size={14} />
+                    </div>
+                    <span className="name">添加新用户</span>
+                  </div>
                 </div>
+
                 <div className="dropdown-footer">
-                  <Link href="/users" className="footer-link" onClick={() => setIsMenuOpen(false)}>
-                    <Settings size={14} /> 管理成员
+                  <Link href="/users" className="footer-link manage-center" onClick={() => setIsMenuOpen(false)}>
+                    <Settings size={14} /> 档案管理中心
                   </Link>
                   <div className="footer-link logout" onClick={logout}>
                     <LogOut size={14} /> 退出登录
@@ -94,6 +138,44 @@ export default function Header() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Quick Add Member Modal */}
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="quick-modal card"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3>添加新成员</h3>
+              <p className="modal-desc">为家人创建一个独立的打卡档案</p>
+              
+              <form onSubmit={handleQuickAdd} className="quick-form">
+                <div className="input-group">
+                  <label>档案名称</label>
+                  <input 
+                    type="text" 
+                    placeholder="输入名字，如：小宝" 
+                    value={newName}
+                    onChange={e => setNewName(e.target.value)}
+                    autoFocus
+                    required
+                  />
+                </div>
+                <div className="modal-actions">
+                  <button type="button" className="btn-cancel" onClick={() => setIsAddModalOpen(false)}>取消</button>
+                  <button type="submit" className="btn-confirm" disabled={!newName.trim() || loading}>
+                    {loading ? '创建中...' : '立即创建'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <style jsx>{`
         .header {
@@ -170,7 +252,14 @@ export default function Header() {
           transition: background 0.2s;
         }
         .avatar-group:hover { background: rgba(255,255,255,0.1); }
-        .user-nickname { font-size: 0.9rem; font-weight: 600; }
+        .name-wrap { display: flex; flex-direction: column; align-items: flex-end; }
+        .user-nickname { font-size: 0.9rem; font-weight: 600; line-height: 1.2; }
+        .quick-manage-link { 
+          font-size: 0.65rem; color: rgba(255,255,255,0.8); text-decoration: none; 
+          background: rgba(255,255,255,0.15); padding: 0.1rem 0.4rem; border-radius: 4px;
+          margin-top: 2px; transition: 0.2s;
+        }
+        .quick-manage-link:hover { background: white; color: var(--primary); }
         .avatar-ring { width: 34px; height: 34px; border-radius: 50%; border: 2px solid white; overflow: hidden; background: white; }
         .avatar { width: 100%; height: 100%; object-fit: cover; }
         .arrow-icon { opacity: 0.7; transition: transform 0.2s; }
@@ -188,6 +277,10 @@ export default function Header() {
         }
         .member-item:hover { background: #f8fafc; }
         .member-item.active { background: #eff6ff; color: var(--primary); }
+        .member-item.add-btn { color: var(--text-muted); opacity: 0.8; }
+        .member-item.add-btn:hover { opacity: 1; color: var(--primary); }
+        .add-icon { display: flex; align-items: center; justify-content: center; background: #f1f5f9; color: inherit; }
+        
         .mini-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #e2e8f0; }
         .member-item .name { flex: 1; font-size: 0.9rem; font-weight: 600; color: inherit; }
         .active-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; }
@@ -198,8 +291,52 @@ export default function Header() {
           font-size: 0.85rem; font-weight: 700; color: #1e293b; text-decoration: none; cursor: pointer; transition: 0.2s;
         }
         .footer-link:hover { background: #f8fafc; color: var(--primary); }
+        .footer-link.manage-center { background: #f0f7ff; color: var(--primary); margin-bottom: 2px; }
+        .footer-link.manage-center:hover { background: #e0efff; }
         .footer-link.logout { color: var(--danger); }
         .footer-link.logout:hover { background: #fff5f5; }
+
+        /* Quick Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(8px);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1.5rem;
+        }
+        .quick-modal {
+          width: 100%;
+          max-width: 400px;
+          padding: 2.5rem;
+          border-radius: 32px;
+          background: white;
+          text-align: center;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          position: relative;
+        }
+        .quick-modal h3 { font-size: 1.2rem; font-weight: 850; color: #1e293b; margin-bottom: 0.4rem; }
+        .modal-desc { font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; }
+        
+        .quick-form { display: flex; flex-direction: column; gap: 1.25rem; }
+        .input-group { text-align: left; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 0.5rem; }
+        .input-group input {
+          width: 100%; padding: 0.85rem 1rem; border: 2px solid #f1f5f9; border-radius: 12px;
+          font-size: 1rem; outline: none; transition: 0.2s;
+        }
+        .input-group input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        .modal-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+        .btn-cancel { flex: 1; padding: 0.85rem; border: none; background: #f1f5f9; color: #64748b; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .btn-confirm { flex: 2; padding: 0.85rem; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .btn-confirm:disabled { opacity: 0.5; }
       `}</style>
     </header>
   );

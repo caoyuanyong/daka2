@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRewards } from '@/hooks/useRewards';
 import { useApp } from '@/hooks/useAppContext';
 import { Trophy, Gift, Plus, ChevronLeft, History, Star, ShoppingBag, Award } from 'lucide-react';
@@ -10,8 +10,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function RewardsPage() {
   const [activeTab, setActiveTab] = useState('mall'); // mall, medals
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
+  const [selectedWish, setSelectedWish] = useState(null);
   const [newWish, setNewWish] = useState({ title: '', icon: '🎁', cost: 10, category: '其他' });
   
+  useEffect(() => {
+    if (showAddModal || isExchangeModalOpen) {
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    };
+  }, [showAddModal, isExchangeModalOpen]);
+
   const { wishes, medals, redeemWish, addWish } = useRewards();
   const { user } = useApp();
 

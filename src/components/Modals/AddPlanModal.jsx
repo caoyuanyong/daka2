@@ -1,9 +1,22 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 
 export default function AddPlanModal({ isOpen, onClose, onAdd }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    };
+  }, [isOpen]);
   const [formData, setFormData] = useState({
     title: '',
     category: '学习',

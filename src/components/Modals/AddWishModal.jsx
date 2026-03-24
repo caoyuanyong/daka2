@@ -1,10 +1,23 @@
 "use client";
 
-import { useState } from 'react';
-import { X, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Gift } from 'lucide-react';
 import { useRewards } from '@/hooks/useRewards';
 
-export default function AddWishModal({ isOpen, onClose }) {
+export default function AddWishModal({ isOpen, onClose, onAdd }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    };
+  }, [isOpen]);
   const { addWish } = useRewards();
   const [formData, setFormData] = useState({
     title: '',

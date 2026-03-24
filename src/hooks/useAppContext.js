@@ -240,17 +240,44 @@ export function AppProvider({ children }) {
   };
 
   const deleteMember = async (id) => {
-    const member = members.find(m => m.id === id);
-    if (member?.role === 'primary') {
-      alert('主档案不可删除');
+    const memberToDelete = members.find(m => m.id === id);
+    if (!memberToDelete) return;
+
+    if (memberToDelete.role === 'primary') {
+      alert('主档案是核心账号，不可删除哦');
       return;
     }
-    setMembers(prev => prev.filter(m => m.id !== id));
-    if (currentMemberId === id) setCurrentMemberId(members[0]?.id);
+
+    // 1. Store backup for rollback
+    const originalMembers = [...members];
+    
+    // 2. Optimistic Update
+    const remainingMembers = originalMembers.filter(m => m.id !== id);
+    setMembers(remainingMembers);
+    
+    if (currentMemberId === id) {
+      if (remainingMembers.length > 0) {
+        const nextMember = remainingMembers.find(m => m.role === 'primary') || remainingMembers[0];
+        setCurrentMemberId(nextMember.id);
+      }
+    }
+
     try {
-      await fetch(`/api/members/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || '后端删除请求失败');
+      }
+      // Note: We don't alert successfully for every delete to avoid annoying user, 
+      // but if the user wants feedback, a small toast would be better.
     } catch (error) {
-      console.error('Delete member error:', error);
+      console.error('Delete member error trace:', error);
+      alert(`删除数据库记录时遇到错误: ${error.message}。档案已恢复。`);
+      // Rollback
+      setMembers(originalMembers);
+      if (currentMemberId === id) {
+        setCurrentMemberId(id);
+      }
     }
   };
 
