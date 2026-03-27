@@ -9,7 +9,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  distDir: ".next",
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.cache = false;
