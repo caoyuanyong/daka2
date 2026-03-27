@@ -78,6 +78,7 @@ model Pet {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, typeId])
+  @@index([userId])
   @@map("pets")
 }
 
@@ -93,6 +94,7 @@ model Wish {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
 
+  @@index([userId])
   @@map("wishes")
 }
 
@@ -108,6 +110,7 @@ model Medal {
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("medals")
 }
 
@@ -120,6 +123,7 @@ model History {
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("history")
 }
 
@@ -141,6 +145,7 @@ model Habit {
 
   records     HabitRecord[]
 
+  @@index([userId])
   @@map("habits")
 }
 
@@ -154,6 +159,7 @@ model HabitRecord {
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_habit_record_user")
 
+  @@index([userId])
   @@map("habit_records")
 }
 
@@ -175,5 +181,6 @@ model LearningPlan {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  @@index([userId])
   @@map("learning_plans")
 }

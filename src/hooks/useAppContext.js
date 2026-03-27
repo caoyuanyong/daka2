@@ -84,14 +84,34 @@ export function AppProvider({ children }) {
         const familyData = JSON.parse(savedFamily);
         setFamily(familyData);
 
-        const response = await fetch(`/api/members?familyId=${familyData.id}`);
-        let dbMembers = await response.json();
+        // Optimization: Use consolidated init API
+        const savedActiveId = localStorage.getItem('bj_active_member_id');
+        const activeMemberId = savedActiveId || null;
+        
+        let fetchUrl = `/api/members?familyId=${familyData.id}`;
+        // If we have an active member, try to fully initialize the system state
+        if (activeMemberId) {
+          fetchUrl = `/api/system/init?userId=${activeMemberId}&date=${selectedDate}`;
+        }
 
-        if (Array.isArray(dbMembers)) {
-          setMembers(dbMembers);
-          const savedActiveId = localStorage.getItem('bj_active_member_id');
-          const activeMember = dbMembers.find(m => m.id === savedActiveId) || dbMembers[0];
-          setCurrentMemberId(activeMember?.id);
+        const response = await fetch(fetchUrl);
+        const data = await response.json();
+
+        if (activeMemberId && data.member) {
+          // Hydrate full system state
+          setMembers(m => m.length ? m : [data.member]); // Just one for now or re-fetch all members?
+          // Re-fetch all members for the switcher to work correctly
+          const memRes = await fetch(`/api/members?familyId=${familyData.id}`);
+          const allMembers = await memRes.json();
+          setMembers(allMembers);
+          
+          setCurrentMemberId(data.member.id);
+          // Store initial state for other providers to hydrate
+          window.__INITIAL_STATE__ = data;
+        } else if (Array.isArray(data)) {
+          setMembers(data);
+          const firstMember = data.find(m => m.id === savedActiveId) || data[0];
+          setCurrentMemberId(firstMember?.id);
         }
 
         const savedStats = localStorage.getItem('bj_stats');
@@ -105,6 +125,12 @@ export function AppProvider({ children }) {
     };
 
     initData();
+    
+    // Cleanup initial state after all hooks have had a chance to hydrate (approx 2s)
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined') delete window.__INITIAL_STATE__;
+    }, 2000);
+    return () => clearTimeout(timer);
   }, [pathname, router]);
 
   // VIP Access Guard
@@ -322,11 +348,21 @@ export function AppProvider({ children }) {
     }
   }, [members, currentMemberId]);
 
-  const switchMember = useCallback((id) => {
+  const switchMember = useCallback(async (id) => {
     setCurrentMemberId(id);
     const member = members.find(m => m.id === id);
-    if (member) toast.success(`已切换至: ${member.name}`, { duration: 1500 });
-  }, [members]);
+    if (member) {
+      toast.success(`已切换至: ${member.name}`, { duration: 1500 });
+      // Pre-hydrate for faster switching
+      try {
+        const res = await fetch(`/api/system/init?userId=${id}&date=${selectedDate}`);
+        const data = await res.json();
+        if (typeof window !== 'undefined') window.__INITIAL_STATE__ = data;
+      } catch (e) {
+        console.error('Switch hydration error:', e);
+      }
+    }
+  }, [members, selectedDate]);
 
   const updateStats = useCallback((newStats) => setStats(prev => ({ ...prev, ...newStats })), []);
 
