@@ -60,7 +60,17 @@ export async function POST(request) {
       token
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({ error: '内部服务器错误' }, { status: 500 });
+    const errorLog = `Error: ${error.message}\nStack: ${error.stack}\nDate: ${new Date().toISOString()}\n`;
+    require('fs').appendFileSync('api-error.log', errorLog);
+    console.error('Login error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    return NextResponse.json({ 
+      error: '内部服务器错误',
+      debug: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 });
   }
 }
