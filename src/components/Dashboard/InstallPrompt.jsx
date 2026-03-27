@@ -37,6 +37,12 @@ export default function InstallPrompt() {
   }, []);
  
   const handleInstallClick = async () => {
+    if (platform === 'android') {
+      window.location.href = 'https://genuine-muffin-9941bc.netlify.app/app-release.apk';
+      setVisible(false);
+      return;
+    }
+
     if (!deferredPrompt) {
       const msg = platform === 'ios' 
         ? '请点击浏览器下方的“分享”按钮，然后选择“添加到主屏幕”来安装哦！'
@@ -56,7 +62,7 @@ export default function InstallPrompt() {
 
   const getInstructions = () => {
     if (platform === 'ios') return { title: '添加到主屏幕', desc: '点击分享按钮并选择“添加到主屏幕”' };
-    if (platform === 'android') return { title: '安装为应用', desc: '点击菜单并选择“安装应用”' };
+    if (platform === 'android') return { title: '下载安卓应用', desc: '点击下载官方正式版 APK 安装包' };
     return { title: '安装小打卡到桌面', desc: '点击地址栏右侧的安装图标' };
   };
 
@@ -75,7 +81,7 @@ export default function InstallPrompt() {
       </div>
       <div className="actions">
         <button className="btn btn-primary btn-sm" onClick={handleInstallClick}>
-          {platform === 'desktop' ? '立即安装' : '查看方法'}
+          {platform === 'android' ? '立即下载' : (platform === 'desktop' ? '立即安装' : '查看方法')}
         </button>
         <button className="close-btn" onClick={() => setVisible(false)} title="关闭"><X size={16} /></button>
       </div>
