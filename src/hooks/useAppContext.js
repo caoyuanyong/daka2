@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const AppContext = createContext();
 
@@ -9,6 +11,8 @@ const DEFAULT_MEMBERS = [
 ];
 
 export function AppProvider({ children }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [family, setFamily] = useState(null);
   const [members, setMembers] = useState([]);
   const [currentMemberId, setCurrentMemberId] = useState(null);
@@ -20,17 +24,16 @@ export function AppProvider({ children }) {
   });
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [theme, setThemeState] = useState('blue'); // default theme
-  const [customColor, setCustomColorState] = useState('#3B82F6'); // default custom color
+  const [theme, setThemeState] = useState('blue'); 
+  const [customColor, setCustomColorState] = useState('#3B82F6'); 
 
-  // Persist theme choice (mapping old 'gender' keys for backward compatibility)
+  // Persist theme choice
   const setTheme = (t, customHex = null) => {
     setThemeState(t);
     if (customHex) setCustomColorState(customHex);
     
     if (typeof window !== 'undefined') {
       localStorage.setItem('bj_theme', t);
-      // Overwrite legacy key so it doesn't revert
       localStorage.setItem('bj_gender', t);
       if (customHex) {
         localStorage.setItem('bj_custom_color', customHex);
@@ -46,7 +49,6 @@ export function AppProvider({ children }) {
       
       if (savedCustom) setCustomColorState(savedCustom);
       
-      // Fallback to legacy gender key if theme doesn't exist
       if (!saved) {
         saved = localStorage.getItem('bj_gender');
         if (saved === 'male') saved = 'blue';
@@ -64,7 +66,7 @@ export function AppProvider({ children }) {
     return family.isVip && Number(family.vipExpiry) > Date.now();
   }, [family]);
 
-  // Initialize Auth and Migration
+  // Initialize Auth
   useEffect(() => {
     const initData = async () => {
       const savedToken = localStorage.getItem('bj_token');
@@ -72,8 +74,8 @@ export function AppProvider({ children }) {
 
       if (!savedToken || !savedFamily) {
         setIsInitialized(true);
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+        if (pathname !== '/login') {
+          router.push('/login');
         }
         return;
       }
@@ -82,7 +84,6 @@ export function AppProvider({ children }) {
         const familyData = JSON.parse(savedFamily);
         setFamily(familyData);
 
-        // Fetch members for this family
         const response = await fetch(`/api/members?familyId=${familyData.id}`);
         let dbMembers = await response.json();
 
@@ -104,67 +105,79 @@ export function AppProvider({ children }) {
     };
 
     initData();
-  }, []);
+  }, [pathname, router]);
 
   // VIP Access Guard
   useEffect(() => {
     if (!isInitialized || !family) return;
 
     const publicPaths = ['/login', '/redeem', '/admin'];
-    const path = window.location.pathname;
     
-    if (!publicPaths.includes(path) && !isVipActive()) {
-      // If not VIP and not on a public path, redirect to redeem
-      window.location.href = '/redeem';
+    if (!publicPaths.includes(pathname) && !isVipActive()) {
+      router.push('/redeem');
     }
-  }, [isInitialized, family, isVipActive]);
+  }, [isInitialized, family, isVipActive, pathname, router]);
 
-  const login = async (username, password) => {
+  const login = useCallback(async (username, password) => {
+    const loadId = toast.loading('正在登录...');
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         localStorage.setItem('bj_token', data.token);
         localStorage.setItem('bj_family', JSON.stringify(data.family));
         setFamily(data.family);
         setMembers(data.members);
         setCurrentMemberId(data.members[0]?.id);
+        toast.success('登录成功，欢迎回来！', { id: loadId });
+        router.push('/');
         return true;
       }
+      toast.error(data.error || '登录失败，请检查用户名或密码', { id: loadId });
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      toast.error('网络连接失败', { id: loadId });
       return false;
     }
-  };
+  }, [router]);
 
-  const register = async (username, password, name) => {
+  const register = useCallback(async (username, password, name) => {
+    const loadId = toast.loading('正在注册...');
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, name })
       });
-      return res.ok;
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('注册成功，请登录！', { id: loadId });
+        router.push('/login');
+        return true;
+      }
+      toast.error(data.error || '注册失败', { id: loadId });
+      return false;
     } catch (error) {
-      console.error('Register error:', error);
+      toast.error('网络连接失败', { id: loadId });
       return false;
     }
-  };
+  }, [router]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('bj_token');
     localStorage.removeItem('bj_family');
     localStorage.removeItem('bj_active_member_id');
-    window.location.href = '/login';
-  };
+    toast.success('已退出登录');
+    router.push('/login');
+  }, [router]);
 
-  const redeemCoupon = async (code) => {
+  const redeemCoupon = useCallback(async (code) => {
     if (!family?.id) return { success: false, message: "请先登录" };
+    const loadId = toast.loading('正在兑换...');
     try {
       const res = await fetch('/api/coupons/redeem', {
         method: 'POST',
@@ -176,13 +189,16 @@ export function AppProvider({ children }) {
         const updatedFamily = { ...family, isVip: true, vipExpiry: data.vipExpiry };
         localStorage.setItem('bj_family', JSON.stringify(updatedFamily));
         setFamily(updatedFamily);
+        toast.success('兑换成功！', { id: loadId });
         return { success: true, message: data.message };
       }
+      toast.error(data.error || "兑换失败", { id: loadId });
       return { success: false, message: data.error || "兑换失败" };
     } catch (error) {
+      toast.error('网络错误', { id: loadId });
       return { success: false, message: "网络错误" };
     }
-  };
+  }, [family]);
 
   // Save transient info
   useEffect(() => {
@@ -192,15 +208,18 @@ export function AppProvider({ children }) {
     }
   }, [currentMemberId, stats, isInitialized]);
 
-  // Inject default avatar dynamically for rendering
-  const processedMembers = members.map(m => ({
-    ...m,
-    avatar: m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.name || 'User'}`
-  }));
+  const processedMembers = useMemo(() => {
+    return members.map(m => ({
+      ...m,
+      avatar: m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.name || 'User'}`
+    }));
+  }, [members]);
 
-  const currentUser = processedMembers.find(m => m.id === currentMemberId) || processedMembers[0] || {};
+  const currentUser = useMemo(() => {
+    return processedMembers.find(m => m.id === currentMemberId) || processedMembers[0] || {};
+  }, [processedMembers, currentMemberId]);
 
-  const addPoints = async (amount) => {
+  const addPoints = useCallback(async (amount) => {
     if (!currentMemberId) return;
     const target = members.find(m => m.id === currentMemberId);
     if (!target) return;
@@ -219,10 +238,11 @@ export function AppProvider({ children }) {
     } catch (error) {
       console.error('Add points error:', error);
     }
-  };
+  }, [currentMemberId, members]);
 
-  const addMember = async (name, avatar) => {
+  const addMember = useCallback(async (name, avatar) => {
     if (!family?.id) return;
+    const loadId = toast.loading('正在创建档案...');
     const data = {
       name,
       avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
@@ -239,14 +259,17 @@ export function AppProvider({ children }) {
       if (res.ok) {
         const newMember = await res.json();
         setMembers(prev => [...prev, newMember]);
+        toast.success(`成员 ${name} 创建成功！`, { id: loadId });
         return newMember;
       }
+      toast.error('创建失败', { id: loadId });
     } catch (error) {
+      toast.error('创建失败', { id: loadId });
       console.error('Add member error:', error);
     }
-  };
+  }, [family?.id]);
 
-  const updateMember = async (id, updates) => {
+  const updateMember = useCallback(async (id, updates) => {
     const target = members.find(m => m.id === id);
     if (!target) return;
     const data = { ...target, ...updates };
@@ -260,21 +283,18 @@ export function AppProvider({ children }) {
     } catch (error) {
       console.error('Update member error:', error);
     }
-  };
+  }, [members]);
 
-  const deleteMember = async (id) => {
+  const deleteMember = useCallback(async (id) => {
     const memberToDelete = members.find(m => m.id === id);
     if (!memberToDelete) return;
 
     if (memberToDelete.role === 'primary') {
-      alert('主档案是核心账号，不可删除哦');
+      toast.error('主档案不可删除');
       return;
     }
 
-    // 1. Store backup for rollback
     const originalMembers = [...members];
-    
-    // 2. Optimistic Update
     const remainingMembers = originalMembers.filter(m => m.id !== id);
     setMembers(remainingMembers);
     
@@ -289,23 +309,26 @@ export function AppProvider({ children }) {
       const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || '后端删除请求失败');
+        throw new Error(errorData.error || '后端删除失败');
       }
-      // Note: We don't alert successfully for every delete to avoid annoying user, 
-      // but if the user wants feedback, a small toast would be better.
+      toast.success('档案已成功删除');
     } catch (error) {
       console.error('Delete member error trace:', error);
-      alert(`删除数据库记录时遇到错误: ${error.message}。档案已恢复。`);
-      // Rollback
+      toast.error(`删除失败: ${error.message}`);
       setMembers(originalMembers);
       if (currentMemberId === id) {
         setCurrentMemberId(id);
       }
     }
-  };
+  }, [members, currentMemberId]);
 
-  const switchMember = (id) => setCurrentMemberId(id);
-  const updateStats = (newStats) => setStats(prev => ({ ...prev, ...newStats }));
+  const switchMember = useCallback((id) => {
+    setCurrentMemberId(id);
+    const member = members.find(m => m.id === id);
+    if (member) toast.success(`已切换至: ${member.name}`, { duration: 1500 });
+  }, [members]);
+
+  const updateStats = useCallback((newStats) => setStats(prev => ({ ...prev, ...newStats })), []);
 
   return (
     <AppContext.Provider value={{ 

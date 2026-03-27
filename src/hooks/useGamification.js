@@ -1,94 +1,114 @@
-"use client";
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useApp } from './useAppContext';
+import { ALL_PET_TYPES } from '@/constants/pets';
+import { PET_LEVELS, PET_INTERACTIONS } from '@/constants/rules';
+import { toast } from 'react-hot-toast';
+import crypto from 'crypto';
+
+export { ALL_PET_TYPES };
 
 const PetContext = createContext();
-
-export const ALL_PET_TYPES = [
-  { id: 'corgi', name: '柯基', image: '/pets/corgi.png', rarity: 'common', cost: 0, desc: '活泼好动的小短腿' },
-  { id: 'shiba', name: '柴犬', image: '/pets/shiba.png', rarity: 'common', cost: 100, desc: '呆萌治愈的微笑天使' },
-  { id: 'golden', name: '金毛大暖男', image: '/pets/golden.png', rarity: 'rare', cost: 300, desc: '阳光温柔的居家伴侣' },
-  { id: 'rabbit', name: '垂耳兔', image: '/pets/rabbit.png', rarity: 'rare', cost: 250, desc: '毛茸茸的乖巧甜心' },
-  { id: 'hamster', name: '贪吃仓鼠', image: '/pets/hamster.png', rarity: 'epic', cost: 800, desc: '脸颊塞满瓜子的胖墩' },
-  { id: 'ragdoll', name: '布偶猫', image: '/pets/ragdoll.png', rarity: 'legendary', cost: 1500, desc: '拥有星辰大海般双眼的仙女' },
-  // New Pets (Using Improved Online Assets)
-  { id: 'husky', name: '哈士奇', image: '/pets/husky.png', rarity: 'epic', cost: 900, desc: '拆房小能手，眼神里透着智慧(二哈)' },
-  { id: 'samoyed', name: '萨摩耶', image: '/pets/samoyed.png', rarity: 'rare', cost: 600, desc: '微笑天使，治愈系白云团子' },
-  { id: 'panda', name: '大熊猫', image: '/pets/panda.png', rarity: 'legendary', cost: 2000, desc: '国宝级选手，除了吃就是睡' },
-  { id: 'capybara', name: '水豚', image: '/pets/capybara.png', rarity: 'legendary', cost: 1800, desc: '情绪极其稳定的精神领袖' },
-  { id: 'fox', name: '小狐狸', image: '/pets/fox.png', rarity: 'rare', cost: 500, desc: '聪明伶俐的红狐，尾巴超级蓬松' },
-  { id: 'koala', name: '考拉', image: '/pets/koala.png', rarity: 'epic', cost: 800, desc: '职业发呆选手，永远在睡觉的边缘徘徊' },
-  { id: 'axolotl', name: '六角恐龙', image: '/pets/axolotl.png', rarity: 'epic', cost: 1100, desc: '粉嫩的水中精灵，治愈系数爆表' },
-  { id: 'penguin', name: '小企鹅', image: '/pets/penguin.png', rarity: 'rare', cost: 450, desc: '来自南极的小绅士，走起路摇摇晃晃' },
-  { id: 'dragon', name: '小福龙', image: '/pets/dragon.png', rarity: 'mythic', cost: 5000, desc: '传说中的吉祥神兽，能带来无尽福气' },
-  { id: 'calico', name: '三花猫', image: '/pets/calico.png', rarity: 'common', cost: 200, desc: '性格灵动的招财小猫' },
-  { id: 'greycat', name: '小灰猫', image: '/pets/greycat.png', rarity: 'common', cost: 150, desc: '乖巧温顺的身后跟班' },
-];
 
 export function PetProvider({ children }) {
   const { user, addPoints, isInitialized: appInitialized } = useApp();
   
-  const initialPet = {
-    name: '小汤圆Buddy',
-    typeId: 'corgi',
+  const initialPet = (typeId) => ({
+    name: '我的小宠',
+    typeId: typeId || 'corgi',
     level: 1,
     intimacy: 0,
     fullness: 80,
     cleanliness: 90,
     mood: 85,
-  };
+    isActive: typeId === 'corgi'
+  });
 
-  const [pet, setPet] = useState(null);
+  // 1. Synchronous state initialization from localStorage to avoid ANY flickering
+  // We use a simplified version because user.id might not be ready on first mount
+  const [pets, setPets] = useState([]);
+  const [activeTypeId, setActiveTypeId] = useState('corgi');
   const [myPets, setMyPets] = useState(['corgi']); 
   const [isInitialized, setIsInitialized] = useState(false);
+  const [evolutionEvent, setEvolutionEvent] = useState(null);
+  const prevLevelRef = React.useRef(null);
 
-  // Load from API and Migration
+  // 2. Immediate recovery when user is available (still for flicker-free but handles user change)
+  useEffect(() => {
+    if (user?.id) {
+      const storedType = localStorage.getItem(`last_active_type_${user.id}`);
+      const storedPet = localStorage.getItem(`last_active_pet_full_${user.id}`);
+      
+      if (storedType) setActiveTypeId(storedType);
+      if (storedPet) {
+        const pet = JSON.parse(storedPet);
+        setPets(prev => {
+          if (!prev.find(p => p.typeId === pet.typeId)) return [pet, ...prev];
+          return prev;
+        });
+        prevLevelRef.current = pet.level;
+      }
+    }
+  }, [user?.id]);
+
+  const activePet = React.useMemo(() => {
+    return pets.find(p => p.typeId === activeTypeId) || initialPet(activeTypeId);
+  }, [pets, activeTypeId]);
+
+  const getLevelInfo = (intimacy) => {
+    const levelInfo = [...PET_LEVELS].reverse().find(l => intimacy >= l.threshold);
+    return levelInfo || PET_LEVELS[0];
+  };
+
+  const currentLevelInfo = React.useMemo(() => {
+    return getLevelInfo(activePet?.intimacy || 0);
+  }, [activePet?.intimacy]);
+
+  // Handle data fetching
   useEffect(() => {
     if (appInitialized && user?.id) {
       const loadPetData = async () => {
         setIsInitialized(false);
         try {
-          const res = await fetch(`/api/pets?userId=${user.id}`);
+          const res = await fetch(`/api/pets?userId=${user.id}&t=${Date.now()}`);
           const data = await res.json();
           
-          let dbPet = data.pet;
-          let dbMyPets = data.unlockedPets;
+          let dbPets = data.pets || [];
+          let dbMyPets = data.unlockedPets || ['corgi'];
 
-          // Migration: If no pet in DB, check localStorage
-          if (!dbPet) {
+          if (dbPets.length === 0) {
+            // Migration logic if needed
             const savedPet = localStorage.getItem(`bj_pet_${user.id}`);
-            const savedMyPets = localStorage.getItem(`bj_my_pets_${user.id}`);
-            
-            const petToMigrate = savedPet ? JSON.parse(savedPet) : initialPet;
-            const myPetsToMigrate = savedMyPets ? JSON.parse(savedMyPets) : ['corgi'];
-
-            const resPost = await fetch('/api/pets', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                ...petToMigrate, 
-                userId: user.id,
-                unlockedPets: myPetsToMigrate
-              })
-            });
-            if (resPost.ok) {
-              dbPet = await resPost.json();
-              dbMyPets = myPetsToMigrate;
+            if (savedPet) {
+              const petToMigrate = JSON.parse(savedPet);
+              await fetch('/api/pets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...petToMigrate, userId: user.id, isActive: true })
+              });
+              dbPets = [petToMigrate];
             }
           }
 
-          if (dbPet) setPet(dbPet);
-          if (dbMyPets) {
-            // Ensure current pet is always in the unlocked list
-            if (dbPet && !dbMyPets.includes(dbPet.typeId)) {
-              dbMyPets.push(dbPet.typeId);
-            }
-            setMyPets(dbMyPets);
+          setPets(dbPets);
+          setMyPets(dbMyPets);
+          
+          const sortedPets = [...dbPets].sort((a, b) => {
+             if (a.isActive !== b.isActive) return b.isActive ? 1 : -1;
+             return new Date(b.lastInteraction) - new Date(a.lastInteraction);
+          });
+
+          const active = sortedPets[0];
+          if (active) {
+            setActiveTypeId(active.typeId);
+            prevLevelRef.current = active.level;
+            // Update cache for next reload
+            localStorage.setItem(`last_active_type_${user.id}`, active.typeId);
+            localStorage.setItem(`last_active_pet_full_${user.id}`, JSON.stringify(active));
           }
+          
           setIsInitialized(true);
         } catch (error) {
-          console.error('Load pet error:', error);
+          console.error('Load pets error:', error);
           setIsInitialized(true);
         }
       };
@@ -97,64 +117,103 @@ export function PetProvider({ children }) {
     }
   }, [user?.id, appInitialized]);
 
-  const levelName = (lvl) => {
-    if (lvl >= 5) return '超默契';
-    if (lvl >= 4) return '最佳伙伴';
-    if (lvl >= 3) return '好伙伴';
-    if (lvl >= 2) return '好朋友';
-    return '刚认识';
-  };
+  const lastTypeIdRef = React.useRef(activePet?.typeId);
+
+  // Evolution detection
+  useEffect(() => {
+    if (isInitialized && activePet) {
+      // If the pet type changed, just sync the ref and don't trigger ritual
+      if (activePet.typeId !== lastTypeIdRef.current) {
+        prevLevelRef.current = activePet.level;
+        lastTypeIdRef.current = activePet.typeId;
+        return;
+      }
+
+      // Normal evolution check
+      if (prevLevelRef.current !== null && activePet.level > prevLevelRef.current) {
+        setEvolutionEvent({
+          typeId: activePet.typeId,
+          oldLevel: prevLevelRef.current,
+          newLevel: activePet.level,
+          petName: activePet.name
+        });
+      }
+      prevLevelRef.current = activePet.level;
+      lastTypeIdRef.current = activePet.typeId;
+    }
+  }, [activePet?.level, activePet?.typeId, isInitialized]);
 
   const updatePetRemote = async (updatedPet, updatedMyPets = null) => {
+    if (typeof window !== 'undefined' && user?.id) {
+       localStorage.setItem(`last_active_pet_full_${user.id}`, JSON.stringify(updatedPet));
+       localStorage.setItem(`last_active_type_${user.id}`, updatedPet.typeId);
+    }
     try {
-      await fetch(`/api/pets?userId=${user.id}`, {
+      await fetch(`/api/pets?userId=${user.id}&typeId=${updatedPet.typeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          ...updatedPet, 
-          unlockedPets: updatedMyPets || myPets 
-        })
+        body: JSON.stringify({ ...updatedPet, unlockedPets: updatedMyPets || myPets })
       });
     } catch (error) {
-      console.error('Update pet persistence error:', error);
+      console.error('Update pet error:', error);
     }
   };
 
   const interact = async (type) => {
-    if (!pet) return false;
-    const config = {
-      feed: { cost: 10, fullness: 20, intimacy: 5, mood: 5 },
-      wash: { cost: 15, cleanliness: 30, intimacy: 8, mood: -5 },
-      play: { cost: 20, mood: 30, fullness: -10, intimacy: 12 },
-      sleep: { cost: 8, mood: 10, fullness: -5, intimacy: 3 }
-    };
+    if (!activePet) return false;
+    const action = PET_INTERACTIONS[type];
+    if (!action) return false;
 
-    const action = config[type];
     if (user.points < action.cost) {
-      alert('星星不足，快去打卡赚星星吧！');
+      toast.error('星星不足');
       return false;
     }
 
     addPoints(-action.cost);
     
-    // Update local state
-    const newPet = {
-      ...pet,
-      fullness: Math.min(100, Math.max(0, pet.fullness + (action.fullness || 0))),
-      cleanliness: Math.min(100, Math.max(0, pet.cleanliness + (action.cleanliness || 0))),
-      mood: Math.min(100, Math.max(0, pet.mood + (action.mood || 0))),
-      intimacy: pet.intimacy + (action.intimacy || 0)
+    const updatedPet = {
+      ...activePet,
+      fullness: Math.min(100, Math.max(0, (Number(activePet.fullness) || 0) + (action.fullness || 0))),
+      cleanliness: Math.min(100, Math.max(0, (Number(activePet.cleanliness) || 0) + (action.cleanliness || 0))),
+      mood: Math.min(100, Math.max(0, (Number(activePet.mood) || 0) + (action.mood || 0))),
+      intimacy: (Number(activePet.intimacy) || 0) + (action.intimacy || 0)
     };
     
-    // Level calculation
-    if (newPet.intimacy >= 700) newPet.level = 5;
-    else if (newPet.intimacy >= 300) newPet.level = 4;
-    else if (newPet.intimacy >= 150) newPet.level = 3;
-    else if (newPet.intimacy >= 50) newPet.level = 2;
+    updatedPet.level = getLevelInfo(updatedPet.intimacy).level;
     
-    setPet(newPet);
-    updatePetRemote(newPet);
+    setPets(prev => prev.map(p => p.typeId === activeTypeId ? updatedPet : p));
+    updatePetRemote(updatedPet);
     return true;
+  };
+
+  const switchPet = async (typeId) => {
+    const petType = ALL_PET_TYPES.find(t => t.id === typeId);
+    if (!petType) return;
+    
+    setActiveTypeId(typeId);
+    if (typeof window !== 'undefined' && user?.id) {
+      localStorage.setItem(`last_active_type_${user.id}`, typeId);
+      const targetInState = pets.find(p => p.typeId === typeId);
+      if (targetInState) localStorage.setItem(`last_active_pet_full_${user.id}`, JSON.stringify(targetInState));
+    }
+
+    try {
+      const targetPet = pets.find(p => p.typeId === typeId) || initialPet(typeId);
+      const res = await fetch('/api/pets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...targetPet, userId: user.id, isActive: true })
+      });
+      if (res.ok) {
+        const savedPet = await res.json();
+        setPets(prev => {
+          const others = prev.filter(p => p.typeId !== typeId).map(p => ({ ...p, isActive: false }));
+          return [...others, savedPet];
+        });
+      }
+    } catch (error) {
+      console.error('Switch pet error:', error);
+    }
   };
 
   const unlockPet = async (typeId) => {
@@ -162,42 +221,42 @@ export function PetProvider({ children }) {
     if (!petType) return;
     if (myPets.includes(typeId)) return switchPet(typeId);
 
-    if (user.points < petType.cost) {
-      alert('星星不足，无法领养新宠物');
-      return;
-    }
+    if (user.points < petType.cost) return toast.error('星星不足');
 
     addPoints(-petType.cost);
     const newMyPets = [...myPets, typeId];
     setMyPets(newMyPets);
     
-    const newPet = { ...pet, typeId };
-    setPet(newPet);
-    updatePetRemote(newPet, newMyPets);
-  };
-
-  const switchPet = async (typeId) => {
-    const newPet = { ...pet, typeId };
-    setPet(newPet);
-    updatePetRemote(newPet);
+    const newPetData = { ...initialPet(typeId), name: `我的${petType.name}`, isActive: true };
+    try {
+      const res = await fetch('/api/pets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newPetData, userId: user.id, unlockedPets: newMyPets })
+      });
+      if (res.ok) {
+        const savedPet = await res.json();
+        setPets(prev => [...prev.filter(p => p.typeId !== typeId).map(p => ({ ...p, isActive: false })), savedPet]);
+        setActiveTypeId(typeId);
+        localStorage.setItem(`last_active_type_${user.id}`, typeId);
+        localStorage.setItem(`last_active_pet_full_${user.id}`, JSON.stringify(savedPet));
+      }
+    } catch (error) {
+      console.error('Unlock error:', error);
+    }
   };
 
   const renamePet = async (name) => {
-    const newPet = { ...pet, name };
-    setPet(newPet);
-    updatePetRemote(newPet);
+    const updatedPet = { ...activePet, name };
+    setPets(prev => prev.map(p => p.typeId === activeTypeId ? updatedPet : p));
+    updatePetRemote(updatedPet);
   };
 
   return (
     <PetContext.Provider value={{
-      pet: pet || initialPet,
-      myPets,
-      interact,
-      renamePet,
-      unlockPet,
-      switchPet,
-      levelName: levelName(pet?.level || 1),
-      isInitialized
+      pet: activePet, myPets, interact, renamePet, unlockPet, switchPet,
+      levelName: currentLevelInfo.name, levelInfo: currentLevelInfo,
+      isInitialized, evolutionEvent, clearEvolutionEvent: () => setEvolutionEvent(null)
     }}>
       {children}
     </PetContext.Provider>

@@ -1,21 +1,34 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { z } from 'zod';
+
+const registerSchema = z.object({
+  username: z.string().min(1, '用户名不能为空'),
+  password: z.string().min(6, '密码长度至少为 6 位'),
+  name: z.string().min(1, '显示名称不能为空'),
+});
 
 export async function POST(request) {
   try {
-    const { username, password } = await request.json();
+    const body = await request.json();
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Missing username or password' }, { status: 400 });
+    // 1. Zod Validation
+    const validation = registerSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ 
+        error: validation.error.errors[0].message 
+      }, { status: 400 });
     }
+
+    const { username, password, name } = validation.data;
 
     const existingFamily = await prisma.family.findUnique({
       where: { username }
     });
 
     if (existingFamily) {
-      return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
+      return NextResponse.json({ error: '该用户名已被占用' }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -26,7 +39,7 @@ export async function POST(request) {
         password: hashedPassword,
         members: {
           create: [
-            { name: '管理员', role: 'primary' }
+            { name: name || '管理员', role: 'primary' }
           ]
         }
       },
@@ -42,6 +55,6 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Register error:', error);
-    return NextResponse.json({ error: 'Failed to register' }, { status: 500 });
+    return NextResponse.json({ error: '注册失败，请稍后重试' }, { status: 500 });
   }
 }

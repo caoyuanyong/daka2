@@ -3,39 +3,43 @@
 import { useLearning } from "@/hooks/useLearningPlan";
 import { useHabits } from "@/hooks/useHabits";
 import { Clock, Sun, CheckCircle, Percent } from "lucide-react";
+import { useMemo } from "react";
 
 export default function StatsGrid() {
   const { plans } = useLearning();
   const { habits, records } = useHabits();
-  const today = new Date().toISOString().split('T')[0];
+  
+  const metrics = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
 
-  // 计算今日学习任务统计
-  const totalTasks = plans.length;
-  const completedTasks = plans.filter(p => p.completed).length;
-  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    // 1. 计算今日学习任务统计
+    const totalTasks = plans.length;
+    const completedTasks = plans.filter(p => p.completed).length;
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // 计算今日学习时长 (处理数值型和字符串型，避免 NaN)
-  const learningTime = plans
-    .filter(p => p.completed && p.timeType === 'duration')
-    .reduce((acc, curr) => {
-      const val = parseFloat(curr.timeValue);
-      return acc + (isNaN(val) ? 0 : val);
-    }, 0);
+    // 2. 计算今日学习时长
+    const learningTime = plans
+      .filter(p => p.completed && p.timeType === 'duration')
+      .reduce((acc, curr) => {
+        const val = parseFloat(curr.timeValue);
+        return acc + (isNaN(val) ? 0 : val);
+      }, 0);
 
-  // 计算今日运动时长 (从习惯记录中提取)
-  const outdoorTime = habits
-    .filter(h => h.category === '运动' || (h.title && h.title.includes('运动')))
-    .reduce((acc, h) => {
-      const todayRecords = records.filter(r => r.habitId === h.id && r.date === today);
-      return acc + (todayRecords.length * (h.duration || 30)); 
-    }, 0);
+    // 3. 计算今日运动时长
+    const outdoorTime = habits
+      .filter(h => h.category === '运动' || (h.title && h.title.includes('运动')))
+      .reduce((acc, h) => {
+        const todayRecords = records.filter(r => r.habitId === h.id && r.date === today);
+        return acc + (todayRecords.length * (h.duration || 30)); 
+      }, 0);
 
-  const metrics = [
-    { label: "今日学习时间", value: `${learningTime}m`, icon: Clock },
-    { label: "运动户外时间", value: `${outdoorTime}m`, icon: Sun },
-    { label: "今日任务数量", value: `${completedTasks}/${totalTasks}`, icon: CheckCircle },
-    { label: "今日完成率", value: `${completionRate}%`, icon: Percent },
-  ];
+    return [
+      { label: "今日学习时间", value: `${learningTime}m`, icon: Clock },
+      { label: "运动户外时间", value: `${outdoorTime}m`, icon: Sun },
+      { label: "今日任务数量", value: `${completedTasks}/${totalTasks}`, icon: CheckCircle },
+      { label: "今日完成率", value: `${completionRate}%`, icon: Percent },
+    ];
+  }, [plans, habits, records]);
 
   return (
     <div className="stats-grid">

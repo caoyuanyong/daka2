@@ -3,6 +3,7 @@ import "../styles/globals.css";
 import Providers from "@/components/Providers";
 import StyledJsxRegistry from "@/components/StyledJsxRegistry";
 import ThemeInjector from "@/components/ThemeInjector";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
         <StyledJsxRegistry>
           <Providers>
             <ThemeInjector />
+            <Toaster position="top-center" reverseOrder={false} />
             {children}
           </Providers>
         </StyledJsxRegistry>

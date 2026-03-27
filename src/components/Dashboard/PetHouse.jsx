@@ -1,21 +1,28 @@
 "use client";
 
 import { usePet, ALL_PET_TYPES } from "@/hooks/useGamification";
+import { PET_LEVELS } from "@/constants/rules";
 import { Heart, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
 export default function PetHouse() {
-  const { pet, levelName } = usePet();
+  const { pet, levelName, levelInfo } = usePet();
 
   const currentType = ALL_PET_TYPES.find(t => t.id === pet.typeId) || ALL_PET_TYPES[0];
+  
+  // Evolutionary image logic (Featured for corgi, generic for others)
+  const petImage = pet.typeId === 'corgi' 
+    ? `/pets/corgi_lv${pet.level || 1}.png` 
+    : (currentType.image || '/pets/corgi.png');
 
   // Ensure values are within valid ranges
   const safeFullness = Math.min(100, Math.max(0, Number(pet.fullness) || 0));
   const safeMood = Math.min(100, Math.max(0, Number(pet.mood) || 0));
 
-  const nextLevelIntimacy = pet.level >= 4 ? 300 : (pet.level === 3 ? 300 : (pet.level === 2 ? 150 : 50));
-  const progressPercent = Math.min(100, (pet.intimacy / nextLevelIntimacy) * 100);
+  const nextLevelInfo = PET_LEVELS.find(l => l.level === (pet.level || 1) + 1);
+  const nextLevelThreshold = nextLevelInfo ? nextLevelInfo.threshold : (pet.level >= 5 ? 1000 : 700);
+  const progressPercent = Math.min(100, (pet.intimacy / nextLevelThreshold) * 100);
 
   return (
     <div className="pet-house animate-fade-in">
@@ -23,89 +30,148 @@ export default function PetHouse() {
         <div className="pet-header">
           <div className="pet-info">
             <h3>{pet.name}</h3>
-            <p className="level-badge">{levelName} Lv.{pet.level}</p>
+            <span className="level-badge">{levelName} Lv.{pet.level}</span>
           </div>
           <ChevronRight size={20} className="arrow" />
         </div>
 
         <div className="pet-body">
-          <motion.div
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="pet-avatar-box"
-          >
-            <img 
-              src={currentType.image || '/pets/corgi.png'} 
-              alt={currentType.name} 
-              className="pet-img" 
-              style={{ display: 'block' }}
-              onError={(e) => { 
-                if (e.target.src !== window.location.origin + '/pets/corgi.png') {
-                  e.target.src = '/pets/corgi.png'; 
-                }
+          <div className="pet-visual-section">
+            <motion.div
+              animate={{ 
+                y: [0, -10, 0],
+                scale: levelInfo?.scale || 1
               }}
-            />
-          </motion.div>
+              transition={{ 
+                y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                scale: { duration: 0.5 } 
+              }}
+              className="pet-display"
+              style={{ filter: levelInfo?.effect || 'none' }}
+            >
+              <img 
+                src={petImage} 
+                alt={currentType.name} 
+                className="pet-img-main" 
+                onError={(e) => { 
+                  if (e.target.src !== window.location.origin + '/pets/corgi.png') {
+                    e.target.src = '/pets/corgi.png'; 
+                  }
+                }}
+              />
+            </motion.div>
+          </div>
 
-          <div className="pet-stats">
-            <div className="stat-row">
-              <span className="stat-label">饱腹度</span>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${safeFullness}%`, backgroundColor: '#F59E0B' }}
-                />
+          <div className="pet-stats-section">
+            <div className="stat-item">
+              <div className="stat-top">
+                <span className="label">饱腹度</span>
+                <span className="value">{safeFullness}%</span>
               </div>
-              <span className="stat-value">{safeFullness}%</span>
+              <div className="bar-bg">
+                <div className="bar-fill" style={{ width: `${safeFullness}%`, backgroundColor: '#F59E0B' }} />
+              </div>
             </div>
-            <div className="stat-row">
-              <span className="stat-label">心情值</span>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${safeMood}%`, backgroundColor: '#EC4899' }}
-                />
+            <div className="stat-item">
+              <div className="stat-top">
+                <span className="label">心情值</span>
+                <span className="value">{safeMood}%</span>
               </div>
-              <span className="stat-value">{safeMood}%</span>
+              <div className="bar-bg">
+                <div className="bar-fill" style={{ width: `${safeMood}%`, backgroundColor: '#EC4899' }} />
+              </div>
             </div>
-            <div className="stat-row">
-              <span className="stat-label">亲密度</span>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${progressPercent}%`, backgroundColor: '#10B981' }}
-                />
+            <div className="stat-item">
+              <div className="stat-top">
+                <span className="label">亲密度</span>
+                <span className="value">{pet.intimacy}/{nextLevelThreshold}</span>
               </div>
-              <span className="stat-value">{pet.intimacy}/{nextLevelIntimacy}</span>
+              <div className="bar-bg">
+                <div className="bar-fill" style={{ width: `${progressPercent}%`, backgroundColor: '#10B981' }} />
+              </div>
             </div>
           </div>
         </div>
       </Link>
 
       <style jsx>{`
-        .pet-container { display: block; text-decoration: none; color: inherit; transition: all 0.2s; }
-        .pet-container:hover { transform: translateX(4px); }
-        .pet-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem; }
-        .pet-info h3 { font-size: 1.05rem; font-weight: 900; margin-bottom: 0.3rem; color: #1e293b; }
-        .level-badge { font-size: 0.75rem; background: #eff6ff; color: #3b82f6; padding: 0.2rem 0.6rem; border-radius: 8px; display: inline-block; font-weight: 800; }
-        .arrow { color: #94a3b8; }
-
-        .pet-body { display: flex; align-items: center; gap: 1.2rem; }
-        
-        .pet-avatar-box { 
-          width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; 
-          background: white; border-radius: 16px; 
-          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-          border: 3px solid white; overflow: hidden;
+        .pet-house {
+          background: white;
+          border-radius: 24px;
+          padding: 1.5rem;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+          transition: 0.3s;
         }
-        .pet-img { width: 30%; height: 30%; object-fit: cover; pointer-events: none; }
+        .pet-house:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+        }
+        .pet-container { display: block; text-decoration: none; color: inherit; }
+        
+        .pet-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .pet-info h3 { font-size: 1.1rem; font-weight: 900; color: #1e293b; margin: 0; }
+        .level-badge { 
+          font-size: 0.7rem; background: #eff6ff; color: #3b82f6; 
+          padding: 0.2rem 0.6rem; border-radius: 6px; 
+          display: inline-block; font-weight: 800; margin-top: 0.3rem;
+        }
+        .arrow { color: #cbd5e1; }
 
-        .pet-stats { flex: 1; display: flex; flex-direction: column; gap: 0.85rem; }
-        .stat-row { display: flex; align-items: center; gap: 0.75rem; }
-        .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 800; width: 2.8rem; }
-        .progress-bar { flex: 1; height: 8px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        .stat-value { font-size: 0.7rem; color: #94a3b8; font-weight: 800; width: 2.5rem; text-align: right; }
+        .pet-body { 
+          display: grid; 
+          grid-template-columns: 160px 1fr; 
+          gap: 1.5rem; 
+          align-items: center; 
+          padding: 0.5rem 0;
+        }
+        
+        .pet-visual-section {
+          height: 160px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        }
+        .pet-display {
+          width: 110px;
+          height: 110px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2;
+        }
+        .pet-img-main { 
+          width: 100%; 
+          height: 100%; 
+          object-fit: contain; 
+          pointer-events: none;
+        }
+
+        .pet-stats-section { 
+          display: flex; 
+          flex-direction: column; 
+          gap: 0.8rem; 
+          justify-content: center;
+        }
+        .stat-item { width: 100%; }
+        .stat-top { 
+          display: flex; 
+          justify-content: space-between; 
+          margin-bottom: 0.3rem; 
+          font-size: 0.75rem; 
+          font-weight: 800;
+        }
+        .label { color: #64748b; }
+        .value { color: #1e293b; }
+        
+        .bar-bg { height: 8px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 999px; transition: width 0.8s ease-out; }
+
+        @media (max-width: 640px) {
+          .pet-body { grid-template-columns: 1fr; gap: 1rem; text-align: center; }
+          .pet-visual-section { height: 120px; }
+          .pet-stats-section { align-items: stretch; }
+        }
       `}</style>
     </div>
   );

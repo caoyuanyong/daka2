@@ -2,6 +2,7 @@
 
 import { useApp } from "@/hooks/useAppContext";
 import { usePet, ALL_PET_TYPES } from "@/hooks/useGamification";
+import { PET_LEVELS } from "@/constants/rules";
 import { ChevronLeft, Edit2, Heart, Soup, Bath, TreePine, BedDouble, Lock, Check, Settings, Smile } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -9,9 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function PetPage() {
   const { user } = useApp();
-  const { pet, myPets, interact, renamePet, levelName, unlockPet, switchPet } = usePet();
+  const { pet, myPets, interact, renamePet, levelName, levelInfo, unlockPet, switchPet } = usePet();
   const [isEditingName, setIsEditingName] = useState(false);
-  const [newName, setNewName] = useState(pet.name);
+  const [newName, setNewName] = useState(pet?.name || '');
   const [actionFeedback, setActionFeedback] = useState(null);
 
   const handleRename = () => {
@@ -30,6 +31,11 @@ export default function PetPage() {
   };
 
   const currentType = ALL_PET_TYPES.find(t => t.id === pet.typeId) || ALL_PET_TYPES[0];
+  
+  // Evolutionary image logic
+  const petImage = pet.typeId === 'corgi' 
+    ? `/pets/corgi_lv${pet.level || 1}.png` 
+    : (currentType.image || '/pets/corgi.png');
 
   const stats = [
     { 
@@ -53,13 +59,7 @@ export default function PetPage() {
     { type: 'sleep', label: '睡觉', icon: BedDouble, cost: 8, bgcolor: '#8B5CF6' },
   ];
 
-  const levelMilestones = [
-    { level: 1, title: 'Lv.1 刚认识', req: 0, desc: '解锁基础陪伴文案' },
-    { level: 2, title: 'Lv.2 好朋友', req: 50, desc: '解锁更多互动反馈' },
-    { level: 3, title: 'Lv.3 好伙伴', req: 150, desc: '解锁更多表情或背景' },
-    { level: 4, title: 'Lv.4 最佳伙伴', req: 300, desc: '解锁最佳伙伴展示标识' },
-    { level: 5, title: 'Lv.5 超默契', req: 700, desc: '继续陪伴会解锁更高阶的专属成长成就' }
-  ];
+  const levelMilestones = PET_LEVELS;
 
   return (
     <div className="pet-page-container animate-fade-in">
@@ -120,12 +120,19 @@ export default function PetPage() {
               </AnimatePresence>
               
               <motion.div 
-                animate={{ y: [0, -12, 0], scale: actionFeedback ? [1, 1.05, 1] : 1 }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                animate={{ 
+                  y: [0, -12, 0], 
+                  scale: actionFeedback ? [levelInfo?.scale || 1, (levelInfo?.scale || 1) * 1.05, levelInfo?.scale || 1] : (levelInfo?.scale || 1) 
+                }}
+                transition={{ 
+                  y: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
+                  scale: { duration: 0.5 }
+                }}
+                style={{ filter: levelInfo?.effect || 'none' }}
               >
                 <div className="pet-img-stage">
                   <img 
-                    src={currentType.image || '/pets/corgi.png'} 
+                    src={petImage} 
                     alt={currentType.name} 
                     className="hero-pet-image" 
                     onError={(e) => { 
@@ -201,12 +208,12 @@ export default function PetPage() {
                   <div key={m.level} className={`milestone-item ${isCurrent ? 'current' : ''}`}>
                     <div className="m-info">
                       <div className="m-title">
-                        {m.title}
-                        {isCurrent && <span className="current-badge">当前等级</span>}
+                        Lv.{m.level} {m.name}
+                        {isCurrent && <span className="current-badge">当前形态</span>}
                       </div>
-                      <p className="m-desc">{m.desc}</p>
+                      <p className="m-desc">{m.form === 'legendary' ? '最高阶形态，拥有神秘力量。' : `亲密度达到 ${m.threshold} 即可进化。`}</p>
                     </div>
-                    <div className="m-req">{m.req}+</div>
+                    <div className="m-req">{m.threshold}+</div>
                   </div>
                 );
               })}
@@ -254,7 +261,7 @@ export default function PetPage() {
                       {isActive ? (
                         <div className="active-status">陪伴中</div>
                       ) : isUnlocked ? (
-                        <button className="btn-switch" onClick={() => unlockPet(type.id)}>切换</button>
+                        <button className="btn-switch" onClick={() => switchPet(type.id)}>切换</button>
                       ) : (
                         <button className="btn-buy" onClick={() => unlockPet(type.id)}>-{type.cost} 星星</button>
                       )}

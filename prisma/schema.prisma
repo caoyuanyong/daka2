@@ -41,7 +41,7 @@ model User {
   habits        Habit[]
   records       HabitRecord[]
   learningPlans LearningPlan[]
-  pet           Pet?
+  pets          Pet[]
   wishes        Wish[]
   medals        Medal[]
   history       History[]
@@ -71,10 +71,12 @@ model Pet {
   fullness        Int       @default(80)
   cleanliness     Int       @default(90)
   mood            Int       @default(85)
+  isActive        Boolean   @default(false)
   lastInteraction DateTime  @default(now())
-  userId          String    @unique
+  userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, typeId])
   @@map("pets")
 }
 
@@ -144,12 +146,12 @@ model Habit {
 model HabitRecord {
   id            String    @id @default(cuid())
   habitId       String
-  habit         Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  habit         Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade, map: "fk_habit_record_habit")
   date          String    // YYYY-MM-DD
   timestamp     DateTime  @default(now())
   pointsChange  Int
   userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_habit_record_user")
 
   @@map("habit_records")
 }

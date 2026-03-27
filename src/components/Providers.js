@@ -5,6 +5,7 @@ import { HabitsProvider } from '@/hooks/useHabits';
 import { PetProvider } from '@/hooks/useGamification';
 import { LearningProvider } from '@/hooks/useLearningPlan';
 import { RewardsProvider } from '@/hooks/useRewards';
+import EvolutionModal from '@/components/Pet/EvolutionModal';
 import { useEffect } from 'react';
 
 export default function Providers({ children }) {
@@ -20,6 +21,7 @@ export default function Providers({ children }) {
         <HabitsProvider>
           <RewardsProvider>
           <PetProvider>
+            <EvolutionModal />
             {children}
           </PetProvider>
           </RewardsProvider>

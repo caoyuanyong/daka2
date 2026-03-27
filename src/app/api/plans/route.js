@@ -1,5 +1,23 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { z } from 'zod';
+
+const planSchema = z.object({
+  userId: z.string().min(1, 'userId 不能为空'),
+  title: z.string().min(1, '计划名称不能为空'),
+  date: z.string().min(1, '日期不能为空'),
+  timeType: z.string().optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  duration: z.string().optional(),
+  completed: z.boolean().default(false),
+  category: z.string().optional(),
+  reward: z.number().int().default(0),
+  repeatType: z.string().optional(),
+  ebbinghausMode: z.string().optional(),
+});
+
+const batchPlanSchema = z.array(planSchema);
 
 export async function GET(request) {
   try {
@@ -8,7 +26,7 @@ export async function GET(request) {
     const date = searchParams.get('date');
     
     if (!userId) {
-      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+      return NextResponse.json({ error: '缺少 userId' }, { status: 400 });
     }
 
     const where = { userId };
@@ -23,16 +41,22 @@ export async function GET(request) {
     return NextResponse.json(plans);
   } catch (error) {
     console.error('Fetch plans error:', error);
-    return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
+    return NextResponse.json({ error: '获取计划列表失败' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const data = await request.json();
+    const body = await request.json();
     
     // Support both single plan and batch add
-    if (Array.isArray(data)) {
+    if (Array.isArray(body)) {
+      const validation = batchPlanSchema.safeParse(body);
+      if (!validation.success) {
+        return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      }
+      
+      const data = validation.data;
       const newPlans = await prisma.learningPlan.createMany({
         data: data.map(plan => ({
           title: plan.title,
@@ -41,9 +65,9 @@ export async function POST(request) {
           startTime: plan.startTime,
           endTime: plan.endTime,
           duration: plan.duration,
-          completed: plan.completed || false,
+          completed: plan.completed,
           category: plan.category,
-          reward: plan.reward || 0,
+          reward: plan.reward,
           repeatType: plan.repeatType,
           ebbinghausMode: plan.ebbinghausMode,
           userId: plan.userId
@@ -51,6 +75,12 @@ export async function POST(request) {
       });
       return NextResponse.json({ count: newPlans.count });
     } else {
+      const validation = planSchema.safeParse(body);
+      if (!validation.success) {
+        return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      }
+
+      const data = validation.data;
       const newPlan = await prisma.learningPlan.create({
         data: {
           title: data.title,
@@ -59,9 +89,9 @@ export async function POST(request) {
           startTime: data.startTime,
           endTime: data.endTime,
           duration: data.duration,
-          completed: data.completed || false,
+          completed: data.completed,
           category: data.category,
-          reward: data.reward || 0,
+          reward: data.reward,
           repeatType: data.repeatType,
           ebbinghausMode: data.ebbinghausMode,
           userId: data.userId
@@ -71,6 +101,6 @@ export async function POST(request) {
     }
   } catch (error) {
     console.error('Create plan(s) error:', error);
-    return NextResponse.json({ error: 'Failed to create plan(s)' }, { status: 500 });
+    return NextResponse.json({ error: '创建计划失败' }, { status: 500 });
   }
 }
