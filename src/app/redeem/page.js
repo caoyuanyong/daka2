@@ -176,7 +176,19 @@ export default function RedeemPage() {
         li { font-size: 0.9rem; color: #475569; display: flex; align-items: center; gap: 0.5rem; }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-slide-up { animation: slideUp 0.5s ease-out; }
+        @media (max-width: 640px) {
+          .redeem-container { padding: 1rem; }
+          .redeem-card { padding: 2rem 1.25rem; border-radius: 24px; }
+          .icon-box { width: 70px; height: 70px; border-radius: 20px; margin-bottom: 1rem; }
+          .icon-box :global(svg) { width: 32px; height: 32px; }
+          h1 { font-size: 1.4rem; }
+          p { margin-bottom: 1.5rem; font-size: 0.85rem; }
+          input { padding: 1rem; font-size: 0.95rem; border-radius: 12px; }
+          .submit-btn { padding: 1rem; font-size: 1rem; border-radius: 12px; }
+          .info-section { margin-top: 2rem; padding-top: 1.5rem; }
+          .info-section h3 { font-size: 0.9rem; }
+          li { font-size: 0.8rem; }
+        }
       `}</style>
     </div>
   );

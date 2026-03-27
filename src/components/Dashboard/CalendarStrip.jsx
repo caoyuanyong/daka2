@@ -111,6 +111,24 @@ export default function CalendarStrip() {
         .nav-group .nav-btn:last-child { border-radius: 0 10px 10px 0; }
 
         .days-list { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.75rem; }
+        @media (max-width: 640px) {
+          .calendar-strip { padding: 0.75rem; border-radius: 16px; margin-bottom: 1rem; }
+          .days-list { 
+            display: flex; overflow-x: auto; gap: 0.5rem; 
+            padding: 0.25rem 0;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+          }
+          .days-list::-webkit-scrollbar { display: none; }
+          .day-item { 
+            flex-shrink: 0; width: 48px; padding: 0.75rem 0.25rem; 
+            border-radius: 12px; scroll-snap-align: start;
+          }
+          .day-item .date { font-size: 1rem; }
+          .day-item .label { font-size: 0.55rem; }
+          .strip-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+          .strip-nav { width: 100%; justify-content: space-between; }
+        }
         .day-item { border: none; background: white; padding: 1.1rem 0.5rem; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
         .day-item:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
         .day-item.active { background: #3b82f6; color: white; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3); transform: scale(1.05); z-index: 2; }

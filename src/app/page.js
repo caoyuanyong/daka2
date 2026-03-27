@@ -35,26 +35,40 @@ export default function DashboardPage() {
           padding-bottom: 5rem;
           background-color: var(--bg-main);
         }
+        @media (max-width: 768px) {
+          .container { padding: 4rem 10px 4rem 10px; }
+          .main-content { padding: 0.5rem 0; }
+        }
         .dashboard-content {
-          padding: 0 1rem;
+          padding: 0 var(--content-padding);
           max-width: 1200px;
           margin: 0 auto;
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 0.75rem;
         }
+
+        @media (min-width: 641px) {
+          .dashboard-content { gap: 1.5rem; }
+        }
+
         .main-info-card {
-          padding: 1.5rem;
+          padding: 1rem;
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
-          border-radius: 24px;
+          gap: 1rem;
+          border-radius: 20px;
           box-shadow: 0 10px 30px rgba(0,0,0,0.02);
         }
+
+        @media (min-width: 641px) {
+          .main-info-card { padding: 1.5rem; gap: 1.5rem; border-radius: 24px; }
+        }
+
         .divider {
           height: 1px;
           background: #f1f5f9;
-          margin: 0.5rem 0;
+          margin: 0.25rem 0;
         }
       `}</style>
     </div>

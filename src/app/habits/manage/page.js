@@ -93,7 +93,16 @@ export default function HabisManagePage() {
           font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
           transition: all 0.2s;
         }
-        .big-add-btn:hover { border-color: var(--primary); background: #F5F7FF; }
+        @media (max-width: 640px) {
+          .manage-content { padding: 0.75rem; }
+          .manager-card { padding: 0.75rem; gap: 0.75rem; border-radius: 16px; }
+          .habit-icon-circle { width: 38px; height: 38px; font-size: 1.25rem; border-radius: 10px; }
+          .habit-detail h3 { font-size: 0.85rem; }
+          .habit-detail p { font-size: 0.7rem; }
+          .btn-icon { width: 32px; height: 32px; border-radius: 6px; }
+          .page-header h1 { font-size: 1rem; }
+          .add-text-btn { font-size: 0.9rem; }
+        }
       `}</style>
     </div>
   );

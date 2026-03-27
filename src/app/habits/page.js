@@ -121,18 +121,20 @@ export default function HabitsPage() {
         </div>
       </main>
 
-      <Link href="/habits/manage" className="fab-btn">
-        <Plus size={24} />
-      </Link>
+
 
       <style jsx>{`
-        .habits-container { min-height: 100vh; background: var(--bg-main); padding-bottom: 5rem; }
+        .habits-container { min-height: 100vh; background: var(--bg-main); padding-bottom: 2rem; }
         .sticky-header { background: white; box-shadow: var(--shadow-sm); z-index: 100; position: sticky; top: 0; }
         .header-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 1rem; }
         .header-actions { display: flex; gap: 1rem; color: var(--text-main); }
         .header-actions a { color: inherit; }
 
-        .habits-content { padding: 1rem; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+        .habits-content { padding: 1rem var(--content-padding); max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+        
+        @media (min-width: 641px) {
+          .habits-content { gap: 1.5rem; }
+        }
         
         .summary-card { display: grid; grid-template-columns: repeat(4, 1fr); padding: 1.5rem; gap: 1rem; text-align: center; }
         .stat-box { display: flex; flex-direction: column; gap: 0.25rem; }
@@ -198,18 +200,22 @@ export default function HabitsPage() {
         .list-view .card-body p { height: auto; margin-bottom: 0.25rem; }
         .list-view .check-in-btn { min-width: 100px; margin-top: 0; }
 
-        .fab-btn {
-          position: fixed; right: 2rem; bottom: 2rem;
-          width: 60px; height: 60px; border-radius: 50%;
-          background: var(--primary); color: white;
-          display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-          z-index: 500;
-        }
+
 
         @media (max-width: 640px) {
-          .summary-card { grid-template-columns: 1fr 1fr; }
-          .habits-layout.grid-view { grid-template-columns: 1fr 1fr; }
+          .page-header h1 { font-size: 1rem; }
+          .habits-content { padding: 0.75rem; gap: 0.75rem; }
+          .summary-card { grid-template-columns: repeat(2, 1fr); padding: 1rem; gap: 0.75rem; border-radius: 16px; }
+          .stat-box .value { font-size: 1rem; }
+          .habits-layout.grid-view { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+          .habit-card { padding: 1rem 0.75rem; border-radius: 16px; gap: 0.6rem; }
+          .icon-wrap { width: 36px; height: 36px; border-radius: 10px; font-size: 1.25rem; }
+          .points-tag { font-size: 0.7rem; padding: 0.15rem 0.4rem; }
+          .card-body h3 { font-size: 0.9rem; }
+          .card-body p { font-size: 0.7rem; height: 2rem; }
+          .frequency-info { font-size: 0.65rem; }
+          .check-in-btn { padding: 0.6rem; font-size: 0.8rem; border-radius: 10px; }
+
         }
       `}</style>
     </div>

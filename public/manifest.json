@@ -1,0 +1,22 @@
+{
+  "name": "小打卡 - 学习打卡助手",
+  "short_name": "小打卡",
+  "description": "家庭学习与习惯养成助手",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e11d48",
+  "icons": [
+    {
+      "src": "/pet-dog.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pet-dog.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

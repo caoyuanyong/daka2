@@ -94,6 +94,15 @@ export default function HistoryPage() {
 
         .empty-state { text-align: center; color: #cbd5e1; padding: 4rem 1rem; }
         .empty-state p { margin-top: 1rem; font-size: 0.9rem; font-weight: 600; }
+        @media (max-width: 640px) {
+          .stats-cards { margin-top: 1rem; margin-bottom: 1.5rem; gap: 0.75rem; }
+          .stat-box { padding: 1rem; border-radius: 16px; }
+          .info h3 { font-size: 1.25rem; }
+          .history-item { padding: 0.75rem 1rem; border-radius: 12px; }
+          .item-title h4 { font-size: 0.85rem; }
+          .item-amount { font-size: 1rem; }
+          .content-width { padding: 0 0.75rem; }
+        }
       `}</style>
     </div>
   );

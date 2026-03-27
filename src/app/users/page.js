@@ -177,7 +177,7 @@ export default function UsersPage() {
         .users-page-container {
           min-height: 100vh;
           background-color: #f8fafc;
-          padding-bottom: 4rem;
+          padding-bottom: 2rem;
         }
         .page-header {
           background: white;
@@ -215,11 +215,27 @@ export default function UsersPage() {
         }
         .theme-btn:hover { background: #e2e8f0; color: #3b82f6; transform: translateY(-2px); }
 
-        .users-main { padding: 2rem 1.5rem; max-width: 1200px; margin: 0 auto; }
+        .users-main { padding: 1.5rem var(--content-padding); max-width: 1200px; margin: 0 auto; }
         .members-grid { 
           display: grid; 
           grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-          gap: 1.5rem; 
+          gap: 1.25rem; 
+        }
+
+        @media (max-width: 640px) {
+          .users-main { padding: 0.75rem; }
+          .header-inner { padding: 0 1rem; gap: 0.75rem; }
+          .header-inner h1 { font-size: 1rem; }
+          .add-text-btn { padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 10px; }
+          .members-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+          .member-card { padding: 1rem; border-radius: 20px; }
+          .member-info-row { gap: 1rem; margin-bottom: 1rem; }
+          .member-avatar-box { width: 56px; height: 56px; border-radius: 14px; }
+          .member-text h3 { font-size: 1rem; }
+          .member-footer { padding-top: 1rem; gap: 0.5rem; }
+          .stat-pill { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+          .icon-btn { width: 32px; height: 32px; border-radius: 8px; }
+          .current-badge { font-size: 0.6rem; top: 10px; right: -20px; padding: 0.15rem 1.5rem; }
         }
 
         .member-card {

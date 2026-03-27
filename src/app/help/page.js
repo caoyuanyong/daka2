@@ -298,6 +298,20 @@ export default function HelpPage() {
           color: #64748b;
           line-height: 1.6;
         }
+        @media (max-width: 640px) {
+          .help-header { padding: 2rem 1rem 1.5rem; border-radius: 0 0 24px 24px; }
+          .header-content h1 { font-size: 1.4rem; }
+          .header-content p { font-size: 0.75rem; white-space: normal; }
+          .help-content { margin-top: -1rem; gap: 1rem; padding: 0 0.75rem; }
+          .help-card { padding: 1.25rem; border-radius: 16px; }
+          .card-icon { width: 40px; height: 40px; font-size: 1.25rem; }
+          .how-to li { font-size: 0.85rem; padding-left: 1.25rem; }
+          .suggestion-pill { padding: 0.6rem 0.8rem; font-size: 0.75rem; margin-bottom: 1rem; }
+          .faq-section h3 { font-size: 1rem; }
+          .faq-item h4 { font-size: 0.85rem; }
+          .faq-item p { font-size: 0.8rem; }
+          .back-btn { top: 1rem; left: 1rem; width: 32px; height: 32px; }
+        }
       `}</style>
     </div>
   );

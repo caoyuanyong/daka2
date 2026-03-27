@@ -7,6 +7,7 @@ import { ChevronLeft, Edit2, Heart, Soup, Bath, TreePine, BedDouble, Lock, Check
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import AdoptPetModal from "@/components/Modals/AdoptPetModal";
 
 export default function PetPage() {
   const { user } = useApp();
@@ -14,6 +15,8 @@ export default function PetPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState(pet?.name || '');
   const [actionFeedback, setActionFeedback] = useState(null);
+  const [isAdoptModalOpen, setIsAdoptModalOpen] = useState(false);
+  const [selectedAdoptType, setSelectedAdoptType] = useState(null);
 
   const handleRename = () => {
     if (newName.trim()) {
@@ -30,13 +33,31 @@ export default function PetPage() {
     }
   };
 
+  const handleAdoptClick = (type) => {
+    setSelectedAdoptType(type);
+    setIsAdoptModalOpen(true);
+  };
+
+  const handleAdoptConfirm = async (name, gender) => {
+    if (!selectedAdoptType) return;
+    await unlockPet(selectedAdoptType.id, gender);
+    setIsAdoptModalOpen(false);
+    setSelectedAdoptType(null);
+  };
+
   const currentType = ALL_PET_TYPES.find(t => t.id === pet.typeId) || ALL_PET_TYPES[0];
   
   // Evolutionary image logic
   const isEvolutionary = currentType.isEvolutionary || pet.typeId === 'corgi';
-  const petImage = isEvolutionary 
-    ? `/pets/${pet.typeId}_lv${pet.level || 1}.png` 
-    : (currentType.image || '/pets/corgi.png');
+  // Evolutionary or Gendered image logic
+  let petImage = currentType.image;
+  
+  if (isEvolutionary) {
+    petImage = `/pets/${pet.typeId}_lv${pet.level || 1}.png`;
+  } else if (currentType.hasGender) {
+    const genderSuffix = pet.gender === 'female' ? 'female' : 'male';
+    petImage = `/pets/${pet.typeId}_${genderSuffix}.png`;
+  }
 
   const heroGradient = pet.typeId === 'cyber_dragon'
     ? 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)'
@@ -243,7 +264,7 @@ export default function PetPage() {
                   <div key={type.id} className={`pet-list-item ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked-item' : ''}`}>
                     <div className="item-avatar-box">
                       <img 
-                        src={type.image || '/pets/corgi.png'} 
+                        src={type.hasGender ? `/pets/${type.id}_male.png` : (type.image || '/pets/corgi.png')} 
                         alt={type.name} 
                         className={`item-pet-img ${!isUnlocked ? 'gray-avatar' : ''}`} 
                         onError={(e) => { 
@@ -271,7 +292,7 @@ export default function PetPage() {
                       ) : isUnlocked ? (
                         <button className="btn-switch" onClick={() => switchPet(type.id)}>切换</button>
                       ) : (
-                        <button className="btn-buy" onClick={() => unlockPet(type.id)}>-{type.cost} 星星</button>
+                        <button className="btn-buy" onClick={() => handleAdoptClick(type)}>-{type.cost} 星星</button>
                       )}
                     </div>
                   </div>
@@ -282,26 +303,35 @@ export default function PetPage() {
         </div>
       </main>
 
+      <AdoptPetModal 
+        isOpen={isAdoptModalOpen} 
+        onClose={() => setIsAdoptModalOpen(false)}
+        petType={selectedAdoptType}
+        onConfirm={handleAdoptConfirm}
+      />
+
       <style jsx>{`
         .pet-page-container {
           min-height: 100vh;
           background: #F1F5F9;
-          padding: 1.5rem;
-          padding-bottom: 4rem;
+          padding: 1.5rem var(--content-padding);
+          max-width: 1200px;
+          margin: 0 auto;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .floating-header {
           background: white;
-          border-radius: 24px;
-          padding: 1rem 1.25rem;
+          padding: 1.5rem 2rem;
+          border-radius: 20px;
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
           box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-          margin-bottom: 1.5rem;
-          max-width: 1200px;
-          margin-left: auto;
-          margin-right: auto;
+          width: 100%;
+          box-sizing: border-box;
         }
         .back-btn { color: #475569; display: flex; }
         .header-titles { flex: 1; }
@@ -312,11 +342,13 @@ export default function PetPage() {
         .settings-btn { background: #F1F5F9; border: none; padding: 0.5rem; border-radius: 50%; color: #64748b; cursor: pointer; display: flex; }
 
         .pet-main-layout {
-          max-width: 1200px;
-          margin: 0 auto;
           display: grid;
+          max-width: 100%;
           grid-template-columns: 1fr 380px;
           gap: 1.5rem;
+          width: 100%;
+          box-sizing: border-box;
+          margin: 0 auto;
           align-items: start;
         }
 
@@ -326,17 +358,17 @@ export default function PetPage() {
         /* ----- Hero Gradient Stage ----- */
         .hero-gradient-card {
           width: 100%;
-          min-height: 380px;
-          background: linear-gradient(135deg, #22D3EE 0%, #34D399 100%);
+          box-sizing: border-box;
+          background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+          padding: 2.5rem;
           border-radius: 32px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          padding: 2rem;
           color: white;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 20px 40px rgba(34, 211, 238, 0.2);
+          box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+          display: flex;
+          flex-direction: column;
+          height: 380px;
         }
         
         .hero-top { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; }
@@ -383,7 +415,14 @@ export default function PetPage() {
         .action-body p { font-size: 0.75rem; opacity: 0.9; font-weight: 500; }
 
         /* ----- Right Panel Base ----- */
-        .growth-progress-card, .more-pets-section { background: white; border-radius: 24px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        .growth-progress-card, .more-pets-section { 
+          width: 100%;
+          box-sizing: border-box;
+          background: white; 
+          border-radius: 24px; 
+          padding: 1.5rem; 
+          box-shadow: 0 4px 20px rgba(0,0,0,0.02); 
+        }
         .panel-title { display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem; font-weight: 900; color: #0f172a; margin-bottom: 1.5rem; }
         .paw-icon { color: #f59e0b; }
 
@@ -445,10 +484,96 @@ export default function PetPage() {
         }
 
         @media (max-width: 768px) {
-          .status-cards-row { display: flex; flex-direction: column; }
-          .hero-gradient-card { padding: 1.5rem; min-height: 350px; }
+          .pet-page-container { 
+            padding: 0 0 2rem 0 !important; 
+            overflow-x: hidden !important; 
+            display: block !important;
+            width: 100% !important; 
+            box-sizing: border-box !important; 
+          }
+          .floating-header { 
+            padding: 10px !important; margin-bottom: 10px !important; border-radius: 12px !important; gap: 8px !important; 
+            width: 100% !important; max-width: 100% !important; box-sizing: border-box !important;
+          }
+          .header-titles h1 { font-size: 1rem; }
+          .header-titles p { display: none; }
+          .star-badge { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+
+          .hero-gradient-card { 
+            padding: 1.25rem !important; height: auto !important; min-height: 180px !important; 
+            border-radius: 20px !important; width: auto !important; max-width: 100% !important; 
+            margin: 0 0 1rem 0 !important; box-sizing: border-box !important;
+          }
+          .pet-name { font-size: 1.5rem; }
+          .lvl-text { font-size: 0.75rem; }
+          .hero-tag { font-size: 0.75rem; padding: 0.3rem 0.75rem; }
+          .hero-center { min-height: 140px; }
           .hero-pet-image { width: 140px; height: 140px; }
-          .actions-grid { grid-template-columns: 1fr; }
+          .hero-bottom { padding-top: 1rem; }
+          .mood-quote { font-size: 0.8rem; }
+          
+          .status-cards-row { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; width: auto !important; }
+          .status-small-card { padding: 0.75rem 0.5rem; border-radius: 12px; gap: 0.4rem; }
+          .status-header { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+          .status-title { font-size: 0.7rem; }
+          .status-value { font-size: 0.75rem; }
+          .s-bar-bg { height: 4px; }
+          .status-desc { font-size: 0.6rem; }
+
+          .actions-grid { 
+            display: flex !important; flex-direction: column !important; 
+            grid-template-columns: none !important; 
+            gap: 10px !important; width: auto !important; box-sizing: border-box !important; 
+          }
+          .action-mega-card { 
+            padding: 12px !important; min-height: none !important; height: auto !important; 
+            border-radius: 12px !important; width: auto !important; max-width: 100% !important;
+            box-sizing: border-box !important; 
+            display: flex !important; align-items: center !important; justify-content: space-between !important;
+            gap: 10px !important;
+          }
+          .action-top { margin-bottom: 0 !important; display: flex !important; align-items: center !important; gap: 6px !important; order: 2 !important; }
+          .cost-pill { font-size: 11px !important; padding: 2px 6px !important; white-space: nowrap !important; line-height: 1 !important; }
+          .action-body { order: 1 !important; flex: 1 !important; min-width: 0 !important; }
+          .action-body h3 { font-size: 14px !important; margin: 0 !important; word-break: break-all !important; }
+          .icon-badge { width: 32px !important; height: 32px !important; flex-shrink: 0 !important; }
+
+          .growth-progress-card { padding: 12px !important; border-radius: 16px !important; width: auto !important; max-width: 100% !important; margin: 0 0 1rem 0 !important; box-sizing: border-box !important; }
+          .more-pets-section { padding: 12px 10px !important; border-radius: 16px !important; margin: 1rem 0 0 0 !important; width: auto !important; max-width: 100% !important; box-sizing: border-box !important; }
+          .milestone-item { 
+            padding: 10px 8px !important; border-radius: 12px !important; gap: 8px !important; 
+            display: flex !important; align-items: center !important; justify-content: space-between !important;
+            width: auto !important; box-sizing: border-box !important;
+          }
+          .milestone-info { flex: 1 !important; min-width: 0 !important; }
+          .m-desc { font-size: 11px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+          .m-points { font-size: 14px !important; font-weight: 800 !important; min-width: 30px !important; text-align: right !important; flex-shrink: 0 !important; }
+          
+          .pet-list-item { padding: 10px 0 !important; gap: 8px !important; width: auto !important; border-bottom: 1px solid #f1f5f930 !important; }
+          .item-avatar-box { width: 44px !important; height: 44px !important; border-radius: 12px !important; }
+          .item-info { flex: 1 !important; min-width: 0 !important; }
+          .item-name-row h4 { font-size: 14px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+          .item-info p { 
+            font-size: 11px !important; line-height: 1.3 !important; 
+            white-space: normal !important; word-break: break-all !important;
+            opacity: 0.8 !important;
+          }
+          .btn-switch, .btn-buy, .active-status { 
+            padding: 6px 10px !important; font-size: 11px !important; 
+            min-width: 58px !important; text-align: center !important; border-radius: 8px !important;
+          }
+          .item-action { margin-left: 8px !important; flex-shrink: 0 !important; }
+        }
+
+        @media (max-width: 480px) {
+          .status-cards-row { gap: 0.35rem; }
+          .status-small-card { padding: 0.6rem 0.25rem; border-radius: 10px; }
+          .pet-name { font-size: 1.35rem; }
+          .m-lvl { font-size: 0.7rem; }
+          .m-points { font-size: 0.85rem; font-weight: 800; min-width: 24px; text-align: right; }
+          .item-avatar-box { width: 40px; height: 40px; }
+          .item-name-row h4 { font-size: 0.8rem; }
+          .btn-switch, .btn-buy, .active-status { min-width: 54px; font-size: 0.65rem; padding: 0.3rem 0.5rem; }
         }
       `}</style>
     </div>

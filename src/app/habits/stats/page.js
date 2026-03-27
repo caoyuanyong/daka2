@@ -153,9 +153,17 @@ export default function HabitsStatsPage() {
         .dot.loss { background: var(--danger); }
 
         @media (max-width: 640px) {
-          .overview-grid { grid-template-columns: 1fr 1fr; }
-          .heatmap-container { gap: 2px; }
-          .date-label { font-size: 0.5rem; }
+          .overview-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+          .stat-card { padding: 1rem; border-radius: 16px; gap: 0.75rem; }
+          .icon-bg { width: 36px; height: 36px; border-radius: 10px; }
+          .icon-bg :global(svg) { width: 16px; height: 16px; }
+          .info .val { font-size: 1rem; }
+          .info .label { font-size: 0.65rem; }
+          .heatmap-container { height: 120px; gap: 2px; padding-bottom: 1rem; }
+          .date-label { font-size: 0.5rem; margin-top: 0.5rem; }
+          .chart-section, .breakdown-section { padding: 1rem; border-radius: 16px; }
+          .stats-content { padding: 0.75rem; gap: 1rem; }
+          .legend { gap: 1rem; }
         }
       `}</style>
     </div>

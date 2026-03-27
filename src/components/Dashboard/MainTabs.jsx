@@ -98,9 +98,13 @@ export default function MainTabs() {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 640px) {
-          .tab-header { flex-direction: column; align-items: stretch; }
-          .tabs { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
-          .tab-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+          .main-tabs-container { padding: 0.75rem; min-height: auto; border-radius: 18px; }
+          .tab-header { flex-direction: column; align-items: stretch; gap: 0.75rem; margin-bottom: 1rem; }
+          .tabs { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 0.25rem; }
+          .tab-btn { padding: 0.5rem 0.4rem; font-size: 0.8rem; border-radius: 10px; }
+          .tab-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-start; width: 100%; }
+          .action-icon-btn { flex: 1; min-width: calc(50% - 0.25rem); padding: 0.5rem; font-size: 0.75rem; justify-content: center; border-radius: 10px; height: 36px; }
+          .action-icon-btn.text-link { min-width: calc(50% - 0.25rem); }
         }
       `}</style>
     </div>

@@ -15,12 +15,36 @@ export default function QuickActions() {
   return (
     <div className="quick-actions">
       {actions.map((a, i) => (
-        <Link key={i} href={a.href} className="action-btn">
-          <div className="icon-wrapper" style={{ backgroundColor: a.bg }}>
-            <a.icon size={20} style={{ color: a.color }} />
-          </div>
-          <span>{a.label}</span>
-        </Link>
+        <div key={i} className="action-btn-wrapper">
+          <Link href={a.href} style={{ 
+            textDecoration: 'none', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: '6px',
+            width: '100%'
+          }}>
+            <div className="icon-wrapper" style={{ 
+              backgroundColor: a.bg,
+              width: '44px',
+              height: '44px',
+              borderRadius: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+            }}>
+              <a.icon size={20} style={{ color: a.color }} />
+            </div>
+            <span style={{ 
+              fontSize: '10.5px', 
+              fontWeight: '700', 
+              color: '#475569',
+              whiteSpace: 'nowrap',
+              textAlign: 'center'
+            }}>{a.label}</span>
+          </Link>
+        </div>
       ))}
 
       <style jsx>{`
@@ -30,38 +54,54 @@ export default function QuickActions() {
           align-items: center;
           width: 100%;
           padding: 0.5rem 0;
+          gap: 0;
         }
-        .action-btn {
+
+        @media (min-width: 800px) {
+          .quick-actions {
+            padding: 1.5rem 0;
+          }
+        }
+
+        .action-btn-wrapper {
           flex: 1;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.4rem;
           cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.2s ease;
           text-decoration: none;
+          min-width: 0;
         }
-        .action-btn:hover {
-          transform: translateY(-4px);
-        }
+
         .icon-wrapper {
-          width: 56px;
-          height: 56px;
-          border-radius: 18px;
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
           display: flex;
           align-items: center;
           justify-content: center;
           box-shadow: 0 4px 10px rgba(0,0,0,0.05);
           transition: all 0.3s;
         }
-        .action-btn:hover .icon-wrapper {
-          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+
+        @media (min-width: 800px) {
+          .icon-wrapper { width: 64px; height: 64px; border-radius: 20px; }
+          .action-btn-wrapper { gap: 0.8rem; }
         }
-        .action-btn span {
-          font-size: 0.8rem;
+
+        .action-btn-wrapper span {
+          font-size: 10.5px;
           font-weight: 700;
-          color: #334155;
-          letter-spacing: -0.01em;
+          color: #475569;
+          white-space: nowrap !important;
+          text-align: center;
+          width: 100%;
+        }
+
+        @media (min-width: 800px) {
+          .action-btn span { font-size: 14px; color: #334155; }
         }
       `}</style>
     </div>

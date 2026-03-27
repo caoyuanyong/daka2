@@ -32,29 +32,93 @@
   --radius: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+
+  /* Layout */
+  --nav-height: 64px;
+  --content-padding: 1rem;
+}
+
+@media (max-width: 480px) {
+  :root {
+    --content-padding: 0.5rem;
+  }
+}
+@media (max-width: 360px) {
+  :root {
+    --content-padding: 0.4rem;
+  }
+}
+
+@media (min-width: 640px) {
+  :root {
+    --content-padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --content-padding: 2.5rem;
+  }
+}
+
+/* Scrollbar styling for a cleaner look on mobile/tablet */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Smooth transition when gender theme switches */
 body {
   transition: background-color 0.4s ease;
+  min-height: 100vh;
+}
+
+/* Utility to hide elements on mobile */
+.mobile-hide {
+  display: none !important;
+}
+
+@media (min-width: 640px) {
+  .mobile-hide {
+    display: flex !important;
+  }
+}
+
+.desktop-hide {
+  display: flex !important;
+}
+
+@media (min-width: 640px) {
+  .desktop-hide {
+    display: none !important;
+  }
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+  -webkit-tap-highlight-color: transparent; /* Remove gray tap highlight on mobile */
 }
 
-html {
-  overflow-x: hidden;
-}
-
+html,
 body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
   max-width: 100%;
+  overscroll-behavior-x: none;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
 }
 
 a {
@@ -72,8 +136,14 @@ html.modal-open, body.modal-open {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
-  padding: 1.5rem;
+  padding: 1rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (min-width: 641px) {
+  .card {
+    padding: 1.5rem;
+  }
 }
 
 .card:hover {

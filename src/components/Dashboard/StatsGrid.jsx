@@ -45,7 +45,7 @@ export default function StatsGrid() {
     <div className="stats-grid">
       {metrics.map((m, i) => (
         <div key={i} className="stat-card">
-          <p className="label">{m.label}</p>
+          <p className="stat-label">{m.label}</p>
           <p className="value">{m.value}</p>
         </div>
       ))}
@@ -53,42 +53,60 @@ export default function StatsGrid() {
       <style jsx>{`
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(2, 1fr);
           gap: 0.5rem;
-          margin-top: -3rem;
+          margin-top: -2.75rem;
           z-index: 10;
+          padding: 0 var(--content-padding);
         }
+        
+        @media (min-width: 641px) {
+          .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-top: -4rem;
+          }
+        }
+
         .stat-card {
           background: white;
-          padding: 1.25rem 0.5rem;
-          border-radius: 20px;
+          padding: 0.75rem 0.4rem;
+          border-radius: 16px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 0.4rem;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-          flex: 1;
-          min-width: 0;
+          gap: 0.2rem;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.06);
           border: 1px solid rgba(255,255,255,0.8);
           backdrop-filter: blur(10px);
         }
-        .label {
-          font-size: 0.7rem;
-          color: #94a3b8;
-          font-weight: 700;
-          white-space: nowrap;
+        
+        .stat-label { 
+          font-size: 9px; 
+          color: #64748b; 
+          font-weight: 700; 
+          margin-bottom: 0.1rem; 
+          white-space: normal; 
+          word-break: keep-all; 
+          line-height: 1;
+          opacity: 0.9;
         }
-        .value {
-          font-size: 1.25rem;
-          font-weight: 900;
-          color: #3b82f6;
+        
+        @media (min-width: 641px) {
+          .stat-label { font-size: 0.75rem; }
+          .stat-card { padding: 1.5rem 0.5rem; border-radius: 24px; }
         }
 
-        @media (max-width: 640px) {
-          .stats-grid { gap: 0.4rem; padding: 0 0.5rem; }
-          .value { font-size: 1rem; }
-          .label { font-size: 0.6rem; }
+        .value {
+          font-size: 15px;
+          font-weight: 900;
+          color: var(--primary);
+          line-height: 1;
+        }
+
+        @media (min-width: 641px) {
+          .value { font-size: 1.5rem; }
         }
       `}</style>
     </div>

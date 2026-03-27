@@ -33,16 +33,22 @@ export default function EvolutionModal() {
 
   if (!evolutionEvent || !mounted) return null;
 
-  const { typeId, oldLevel, newLevel, petName } = evolutionEvent;
+  const { typeId, oldLevel, newLevel, petName, gender } = evolutionEvent;
   const petType = ALL_PET_TYPES.find(t => t.id === typeId);
   const newLevelInfo = PET_LEVELS.find(l => l.level === newLevel);
   const oldLevelInfo = PET_LEVELS.find(l => l.level === oldLevel);
 
   // Correct path for evolutionary images
   const isEvolutionary = petType?.isEvolutionary || typeId === 'corgi';
-  const petImage = isEvolutionary 
-    ? `/pets/${typeId}_lv${newLevel}.png` 
-    : (petType?.image || '/pets/corgi.png');
+  // Evolutionary or Gendered image logic
+  let petImage = petType?.image || '/pets/corgi.png';
+  
+  if (isEvolutionary) {
+    petImage = `/pets/${typeId}_lv${newLevel}.png`;
+  } else if (petType?.hasGender) {
+    const genderSuffix = gender === 'female' ? 'female' : 'male';
+    petImage = `/pets/${typeId}_${genderSuffix}.png`;
+  }
 
   const themeColor = typeId === 'cyber_dragon' ? '#3B82F6' : '#F59E0B';
   const themeGradient = typeId === 'cyber_dragon' 

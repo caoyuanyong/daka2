@@ -208,18 +208,20 @@ export default function RewardsPage() {
         
         .item-card { background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        .wish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; }
+        .wish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
         
-        .wish-card { padding: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; border: 2px solid transparent; transition: 0.2s; }
+        .wish-card { padding: 1rem 0.75rem; display: flex; flex-direction: column; align-items: center; text-align: center; border: 2px solid transparent; transition: 0.2s; }
         .wish-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-        .wish-icon { font-size: 3rem; margin-bottom: 1rem; }
-        .wish-cat { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.25rem; }
-        .wish-card h3 { font-size: 1rem; font-weight: 800; color: #1e293b; margin-bottom: 0.5rem; }
-        .cost-row { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 1.5rem; font-weight: 900; color: #F59E0B; }
-        .redeem-btn { width: 100%; padding: 0.8rem; border: none; border-radius: 12px; background: #3b82f6; color: white; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .wish-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .wish-cat { font-size: 0.6rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.25rem; }
+        .wish-card h3 { font-size: 0.9rem; font-weight: 800; color: #1e293b; margin-bottom: 0.4rem; height: 1.2rem; overflow: hidden; }
+        .cost-row { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 1rem; font-weight: 900; color: #F59E0B; font-size: 0.85rem; }
+        .redeem-btn { width: 100%; padding: 0.6rem; border: none; border-radius: 10px; background: #3b82f6; color: white; font-weight: 800; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
         .redeem-btn.disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
 
-        .add-wish-card { border: 2px dashed #cbd5e1; background: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px; cursor: pointer; transition: 0.2s; }
+        .add-wish-card { border: 2px dashed #cbd5e1; background: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; gap: 0.5rem; cursor: pointer; transition: 0.2s; }
+        .add-wish-card .plus-icon { display: flex; align-items: center; justify-content: center; transform: scale(0.8); }
+        .add-wish-card p { font-size: 0.85rem; font-weight: 700; }
         .add-wish-card:hover { border-color: #3b82f6; color: #3b82f6; background: #f0f9ff; }
 
         .medal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
@@ -249,9 +251,26 @@ export default function RewardsPage() {
         .confirm-btn { background: #3b82f6; color: white; }
 
         @media (max-width: 640px) {
-          .wish-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; }
-          .wish-icon { font-size: 2.25rem; }
-          .medal-grid { grid-template-columns: 1fr; }
+          .rewards-container { padding: 0 0 4rem 0 !important; width: 100% !important; overflow-x: hidden !important; }
+          .wish-grid { grid-template-columns: 1fr; gap: 10px; }
+          .item-card { border-radius: 16px; width: auto !important; margin: 0 10px !important; }
+          .wish-card { flex-direction: row; text-align: left; padding: 12px; gap: 12px; }
+          .wish-icon { font-size: 2rem; margin-bottom: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+          .wish-info { flex: 1; min-width: 0; }
+          .wish-card h3 { height: auto; font-size: 0.9rem; margin-bottom: 2px; }
+          .cost-row { margin-bottom: 0; }
+          .redeem-btn { width: 80px; padding: 6px; font-size: 0.75rem; }
+          
+          .medal-grid { grid-template-columns: 1fr; gap: 10px; }
+          .medal-card { padding: 12px; gap: 10px; }
+          .medal-icon { font-size: 2rem; }
+          .medal-text h4 { font-size: 0.95rem; }
+          .medal-text p { font-size: 0.7rem; }
+          .progress-bar { width: 60px; }
+          
+          .content-area { padding: 0 10px; }
+          .tab-switcher { width: 100%; max-width: none; margin: 12px 0; border-radius: 12px; }
+          .tab-switcher button { padding: 0.6rem; font-size: 0.85rem; }
         }
       `}</style>
     </div>

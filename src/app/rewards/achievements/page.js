@@ -96,8 +96,14 @@ export default function AchievementsPage() {
         .locked h3, .locked p { color: #94A3B8; }
 
         @media (max-width: 640px) {
-          .medal-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-          .stat-summary { gap: 2rem; }
+          .medal-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+          .stat-summary { gap: 1.5rem; padding: 1.25rem; }
+          .val { font-size: 1.5rem; }
+          .medal-icon { width: 60px; height: 60px; font-size: 1.75rem; }
+          .medal-card { padding: 1.25rem 0.5rem; border-radius: 16px; }
+          .medal-card h3 { font-size: 0.85rem; }
+          .medal-card p { font-size: 0.7rem; }
+          .achievements-content { padding: 0.75rem; }
         }
       `}</style>
     </div>

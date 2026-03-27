@@ -163,11 +163,13 @@ export default function TimerPage() {
                 <span>{isActive ? '停止学习' : '开始学习'}</span>
               </button>
 
-              {!isActive && seconds > 0 && (
-                <button className="reset-link" onClick={handleReset}>
-                  <RotateCcw size={14} /> 重置计时
-                </button>
-              )}
+              <button 
+                className="reset-link" 
+                onClick={handleReset}
+                style={{ visibility: (!isActive && seconds > 0) ? 'visible' : 'hidden' }}
+              >
+                <RotateCcw size={14} /> 重置计时
+              </button>
             </div>
           </div>
 
@@ -463,6 +465,7 @@ export default function TimerPage() {
           color: #0369A1;
           font-size: 0.95rem;
           font-weight: 700;
+          min-height: 3.5rem;
         }
 
         @keyframes pulse {
@@ -483,16 +486,22 @@ export default function TimerPage() {
         }
 
         @media (max-width: 768px) {
-          .timer-header { height: 200px; padding: 1.5rem; }
-          .back-btn { left: 1rem; top: 1rem; padding: 0.5rem 1rem; }
-          .plan-title { font-size: 2.2rem; }
-          .time-row { gap: 0.1rem; }
-          .digit-box { width: 80px; height: 100px; border-radius: 16px; }
-          .number { font-size: 2.5rem; }
-          .time-sep { font-size: 1.5rem; }
-          .timer-card { padding: 2rem 1rem; border-radius: 28px; }
-          .start-btn { width: 220px; height: 56px; font-size: 1.2rem; }
-          .card-top-row { margin-bottom: 2rem; }
+          .timer-header { height: 180px; padding: 1.5rem; }
+          .back-btn { left: 1rem; top: 1rem; padding: 0.4rem 0.8rem; font-size: 0.75rem; }
+          .plan-title { font-size: 2rem; margin-top: 2rem; }
+          .time-row { gap: 0.5rem; margin-bottom: 1.5rem; }
+          .digit-box { width: 70px; height: 90px; border-radius: 16px; }
+          .number { font-size: 2.2rem; }
+          .time-sep { font-size: 1.2rem; }
+          .timer-card { padding: 1.5rem 0.75rem; border-radius: 28px; }
+          .start-btn { width: 100%; max-width: 260px; height: 56px; font-size: 1.1rem; }
+          .card-top-row { margin-bottom: 1.5rem; }
+          .mode-btn { padding: 0.5rem 0.6rem; font-size: 0.75rem; gap: 0.3rem; white-space: nowrap; }
+          .mode-tabs { gap: 0.2rem; padding: 0.25rem; border-radius: 14px; }
+          .current-mode-label { margin-bottom: 1rem; }
+          .current-mode-label h2 { font-size: 1.2rem; }
+          .footer-tips { margin-top: 1.5rem; }
+          .tip-box { padding: 0.75rem 1rem; font-size: 0.75rem; }
         }
       `}</style>
     </div>

@@ -135,7 +135,8 @@ export function PetProvider({ children }) {
           typeId: activePet.typeId,
           oldLevel: prevLevelRef.current,
           newLevel: activePet.level,
-          petName: activePet.name
+          petName: activePet.name,
+          gender: activePet.gender // Pass gender for correct asset selection
         });
       }
       prevLevelRef.current = activePet.level;
@@ -216,7 +217,7 @@ export function PetProvider({ children }) {
     }
   };
 
-  const unlockPet = async (typeId) => {
+  const unlockPet = async (typeId, gender = 'male') => {
     const petType = ALL_PET_TYPES.find(t => t.id === typeId);
     if (!petType) return;
     if (myPets.includes(typeId)) return switchPet(typeId);
@@ -227,7 +228,12 @@ export function PetProvider({ children }) {
     const newMyPets = [...myPets, typeId];
     setMyPets(newMyPets);
     
-    const newPetData = { ...initialPet(typeId), name: `我的${petType.name}`, isActive: true };
+    const newPetData = { 
+      ...initialPet(typeId), 
+      name: `我的${petType.name}`, 
+      isActive: true,
+      gender: gender // Persistent gender choice
+    };
     try {
       const res = await fetch('/api/pets', {
         method: 'POST',
@@ -240,6 +246,7 @@ export function PetProvider({ children }) {
         setActiveTypeId(typeId);
         localStorage.setItem(`last_active_type_${user.id}`, typeId);
         localStorage.setItem(`last_active_pet_full_${user.id}`, JSON.stringify(savedPet));
+        toast.success(`成功领养了 ${petType.name}！`);
       }
     } catch (error) {
       console.error('Unlock error:', error);

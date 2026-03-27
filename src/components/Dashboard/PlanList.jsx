@@ -308,11 +308,16 @@ export default function PlanList() {
 
         /* Responsive */
         @media (max-width: 768px) {
-          .card-main-row { padding: 10px 15px; }
-          .plan-info { margin-left: 15px; gap: 10px; }
-          .plan-title { font-size: 0.9rem; max-width: 120px; }
+          .card-main-row { padding: 10px 12px; gap: 10px; }
+          .category-block { width: 44px; height: 44px; border-radius: 10px; }
+          .category-block :global(svg) { width: 18px !important; height: 18px !important; }
+          .category-label { font-size: 0.55rem; }
+          .plan-info { margin-left: 0; flex-direction: column; align-items: flex-start; gap: 4px; }
+          .plan-title { font-size: 0.9rem; max-width: 100%; white-space: normal; line-height: 1.2; margin-bottom: 2px; }
+          .status-tags { gap: 6px; flex-wrap: wrap; }
           .action-btn span { display: none; }
-          .action-btn { padding: 0.6rem; }
+          .action-btn { padding: 0.5rem; border-radius: 10px; }
+          .card-actions { gap: 6px; }
         }
       `}</style>
     </div>

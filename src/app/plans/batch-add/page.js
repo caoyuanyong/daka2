@@ -699,11 +699,15 @@ export default function BatchAddPlansPage() {
         }
 
         @media (max-width: 640px) {
-          .batch-add-content { padding: 1rem; }
+          .batch-add-content { padding: 1rem var(--content-padding); }
           .settings-grid { grid-template-columns: 1fr; }
-          .action-inner { flex-direction: column; gap: 1rem; }
-          .btn-group { width: 100%; }
-          .btn-group button { flex: 1; }
+          .action-bar { padding: 0.75rem 1rem; }
+          .action-inner { flex-direction: row; justify-content: space-between; align-items: center; gap: 0.5rem; }
+          .summary-info { font-size: 0.8rem; }
+          .highlight { font-size: 1.2rem; }
+          .btn-group { gap: 0.5rem; }
+          .btn-group button { padding: 0.6rem 1rem; font-size: 0.85rem; }
+          .btn-save { padding: 0.6rem 1.5rem; }
         }
       `}</style>
     </div>

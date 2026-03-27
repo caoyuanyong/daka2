@@ -13,9 +13,16 @@ export default function PetHouse() {
   
   // Evolutionary image logic (Dynamic for corgi and cyber_dragon)
   const isEvolutionary = currentType.isEvolutionary || pet.typeId === 'corgi';
-  const petImage = isEvolutionary 
-    ? `/pets/${pet.typeId}_lv${pet.level || 1}.png` 
-    : (currentType.image || '/pets/corgi.png');
+  // Evolutionary or Gendered image logic
+  let petImage = currentType.image;
+  
+  if (isEvolutionary) {
+    petImage = `/pets/${pet.typeId}_lv${pet.level || 1}.png`;
+  } else if (currentType.hasGender) {
+    // Determine suffix based on gender (default to male if missing)
+    const genderSuffix = pet.gender === 'female' ? 'female' : 'male';
+    petImage = `/pets/${pet.typeId}_${genderSuffix}.png`;
+  }
 
   // Ensure values are within valid ranges
   const safeFullness = Math.min(100, Math.max(0, Number(pet.fullness) || 0));
@@ -169,9 +176,21 @@ export default function PetHouse() {
         .bar-fill { height: 100%; border-radius: 999px; transition: width 0.8s ease-out; }
 
         @media (max-width: 640px) {
-          .pet-body { grid-template-columns: 1fr; gap: 1rem; text-align: center; }
-          .pet-visual-section { height: 120px; }
-          .pet-stats-section { align-items: stretch; }
+          .pet-house { padding: 1rem; border-radius: 20px; }
+          .pet-body { 
+            grid-template-columns: 74px 1fr; 
+            gap: 1rem; 
+            padding: 0;
+            text-align: left;
+          }
+          .pet-visual-section { height: 74px; width: 74px; }
+          .pet-display { width: 64px; height: 64px; }
+          .pet-info h3 { font-size: 1rem; }
+          .level-badge { font-size: 0.65rem; }
+          .stat-item { gap: 0.2rem; }
+          .pet-stats-section { gap: 0.5rem; }
+          .stat-top { font-size: 0.65rem; margin-bottom: 0.2rem; }
+          .bar-bg { height: 8px; }
         }
       `}</style>
     </div>

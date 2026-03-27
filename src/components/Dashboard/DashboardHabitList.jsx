@@ -71,7 +71,18 @@ export default function DashboardHabitList() {
         .habit-header h3 { font-size: 1rem; font-weight: 800; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 0.75rem; }
         .habit-header .hint { font-size: 0.75rem; color: var(--text-muted); }
 
-        .habit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+        .habit-grid { 
+          display: grid; 
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+          gap: 0.75rem; 
+        }
+
+        @media (max-width: 480px) {
+          .habit-grid { 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 0.5rem;
+          }
+        }
         
         .habit-card { 
           background: #F8FAFC; border: 1px solid var(--border); border-radius: 16px; 
@@ -88,9 +99,12 @@ export default function DashboardHabitList() {
         .habit-emoji { font-size: 1.25rem; }
         .done-check { position: absolute; -top: 4px; -right: 4px; background: #10B981; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
 
-        .habit-info { flex: 1; }
-        .title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .title-row h4 { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+        .habit-info { flex: 1; min-width: 0; }
+        .title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem; gap: 4px; }
+        .title-row h4 { 
+          font-size: 0.85rem; font-weight: 700; color: var(--text-main); 
+          word-break: break-word; line-height: 1.2;
+        }
         
         .points { font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; gap: 2px; padding: 0.1rem 0.4rem; border-radius: 4px; }
         .points.pos { background: #ECFDF5; color: #10B981; }
