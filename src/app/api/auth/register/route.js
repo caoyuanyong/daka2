@@ -18,7 +18,7 @@ export async function POST(request) {
     const validation = registerSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json({ 
-        error: validation.error.errors[0].message 
+        error: validation.error.issues?.[0]?.message || '参数校验失败' 
       }, { status: 400 });
     }
 

@@ -54,7 +54,7 @@ export async function POST(request) {
     if (Array.isArray(body)) {
       const validation = batchPlanSchema.safeParse(body);
       if (!validation.success) {
-        return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+        return NextResponse.json({ error: validation.error.issues?.[0]?.message || '参数校验失败' }, { status: 400 });
       }
       
       const data = validation.data;
@@ -78,7 +78,7 @@ export async function POST(request) {
     } else {
       const validation = planSchema.safeParse(body);
       if (!validation.success) {
-        return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+        return NextResponse.json({ error: validation.error.issues?.[0]?.message || '参数校验失败' }, { status: 400 });
       }
 
       const data = validation.data;

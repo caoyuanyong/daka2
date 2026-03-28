@@ -42,7 +42,7 @@ export async function POST(request) {
     const validation = habitSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.issues?.[0]?.message || '参数校验失败' }, { status: 400 });
     }
 
     const data = validation.data;
