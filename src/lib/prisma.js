@@ -4,39 +4,30 @@ import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter'
 
 const prismaClientSingleton = () => {
   let url = process.env.DATABASE_URL
-  if (!url) {
-    if (process.env.NODE_ENV === 'production') {
-      console.error('CRITICAL: DATABASE_URL is missing in production environment');
-      throw new Error('DATABASE_URL environment variable is required');
-    }
-    // In dev, fallback to default behavior if no URL is provided
-    return new PrismaClient()
-  }
+  if (!url) return new PrismaClient()
 
   // 1. Clean URL: remove quotes, spaces
   url = url.trim().replace(/^["']|["']$/g, '');
 
   try {
     // 2. Parse URL for robust component extraction
-    // Use URL object to strip 4000 port and ensure we only pass host/user/pass/db to connect()
     const urlObj = new URL(url);
     
-    // Explicitly check for Forbidden (403) scenarios: often caused by IP whitelist or incorrect gateway params
-    const connection = connect({
-      host: urlObj.hostname,
-      username: urlObj.username,
-      password: urlObj.password,
-      database: urlObj.pathname.slice(1), 
-    })
+    // Explicitly rebuild the URL string without the :4000 port and WITHOUT any query params (like sslaccept)
+    // The TiDB Serverless HTTP gateway (via @tidbcloud/serverless) takes care of the transport.
+    const cleanUrl = `mysql://${urlObj.username}:${urlObj.password}@${urlObj.hostname}${urlObj.pathname}`;
     
-    const adapter = new PrismaTiDBCloud(connection)
-    console.log(`Prisma: Database client initialized using TiDB Serverless adapter (host: ${urlObj.hostname})`);
-    return new PrismaClient({ adapter })
-  } catch (parseError) {
-    console.warn('Prisma: URL parsing failed, falling back to connection string without port 4000');
-    // Fallback: strip port 4000 but keep connection string structure
-    const cleanUrl = url.replace(':4000', '');
+    console.log(`Prisma: Connecting to ${urlObj.hostname} using cleaner URL strategy (excluding port 4000 and query params)`);
+    
     const connection = connect({ url: cleanUrl });
+    const adapter = new PrismaTiDBCloud(connection);
+    return new PrismaClient({ adapter });
+    
+  } catch (parseError) {
+    console.warn('Prisma: URL parsing failed, falling back to manual string manipulation');
+    // Manual fallback: strip :4000 and anything from '?' onwards
+    const fallbackUrl = url.replace(':4000', '').split('?')[0];
+    const connection = connect({ url: fallbackUrl });
     const adapter = new PrismaTiDBCloud(connection);
     return new PrismaClient({ adapter });
   }
