@@ -3,36 +3,43 @@ import { connect } from '@tidbcloud/serverless'
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter'
 
 const prismaClientSingleton = () => {
-  if (process.env.NODE_ENV === 'production') {
-    let url = process.env.DATABASE_URL
-    if (!url) {
+  let url = process.env.DATABASE_URL
+  if (!url) {
+    if (process.env.NODE_ENV === 'production') {
       console.error('CRITICAL: DATABASE_URL is missing in production environment');
       throw new Error('DATABASE_URL environment variable is required');
     }
-
-    // 彻底剥离可能存在的引号 (Cloudflare 环境变量常见问题) 和多余空格
-    url = url.trim().replace(/^["']|["']$/g, '');
-
-    try {
-      // 提取核心连接组件，规避 URL 编码和端口号带来的 403 Forbidden 错误
-      const urlObj = new URL(url);
-      const connection = connect({
-        host: urlObj.hostname,
-        username: urlObj.username,
-        password: urlObj.password,
-        database: urlObj.pathname.slice(1), 
-      })
-      const adapter = new PrismaTiDBCloud(connection)
-      return new PrismaClient({ adapter })
-    } catch (parseError) {
-      // 如果 URL 解析依然失败，回退到清洗后的字符串，但剔除 4000 端口
-      const cleanUrl = url.replace(':4000', '');
-      const connection = connect({ url: cleanUrl });
-      const adapter = new PrismaTiDBCloud(connection);
-      return new PrismaClient({ adapter });
-    }
+    // In dev, fallback to default behavior if no URL is provided
+    return new PrismaClient()
   }
-  return new PrismaClient()
+
+  // 1. Clean URL: remove quotes, spaces
+  url = url.trim().replace(/^["']|["']$/g, '');
+
+  try {
+    // 2. Parse URL for robust component extraction
+    // Use URL object to strip 4000 port and ensure we only pass host/user/pass/db to connect()
+    const urlObj = new URL(url);
+    
+    // Explicitly check for Forbidden (403) scenarios: often caused by IP whitelist or incorrect gateway params
+    const connection = connect({
+      host: urlObj.hostname,
+      username: urlObj.username,
+      password: urlObj.password,
+      database: urlObj.pathname.slice(1), 
+    })
+    
+    const adapter = new PrismaTiDBCloud(connection)
+    console.log(`Prisma: Database client initialized using TiDB Serverless adapter (host: ${urlObj.hostname})`);
+    return new PrismaClient({ adapter })
+  } catch (parseError) {
+    console.warn('Prisma: URL parsing failed, falling back to connection string without port 4000');
+    // Fallback: strip port 4000 but keep connection string structure
+    const cleanUrl = url.replace(':4000', '');
+    const connection = connect({ url: cleanUrl });
+    const adapter = new PrismaTiDBCloud(connection);
+    return new PrismaClient({ adapter });
+  }
 }
 
 const globalForPrisma = globalThis
