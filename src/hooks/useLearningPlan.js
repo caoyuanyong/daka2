@@ -17,6 +17,14 @@ export function LearningProvider({ children }) {
   useEffect(() => {
     if (appInitialized && user?.id) {
       const loadPlansData = async () => {
+        // Optimization: Use global initial state if available
+        if (window.__INITIAL_STATE__ && window.__INITIAL_STATE__.member?.id === user.id) {
+          const init = window.__INITIAL_STATE__;
+          setPlans(init.plans || []);
+          setIsInitialized(true);
+          return;
+        }
+
         setIsInitialized(false);
         try {
           const res = await fetch(`/api/plans?userId=${user.id}`);

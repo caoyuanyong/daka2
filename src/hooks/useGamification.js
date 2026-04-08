@@ -67,6 +67,26 @@ export function PetProvider({ children }) {
   useEffect(() => {
     if (appInitialized && user?.id) {
       const loadPetData = async () => {
+        // Optimization: Use global initial state if available
+        if (window.__INITIAL_STATE__ && window.__INITIAL_STATE__.member?.id === user.id) {
+          const init = window.__INITIAL_STATE__;
+          // Hydrate from init
+          const hydratedPets = init.activePet ? [init.activePet] : [];
+          // unlockedPets is stored in the member object as a comma-separated or JSON string
+          const unlocked = init.member?.unlockedPets ? JSON.parse(init.member.unlockedPets) : ['fire_dragon'];
+          
+          setPets(hydratedPets);
+          setMyPets(unlocked);
+          
+          if (init.activePet) {
+            setActiveTypeId(init.activePet.typeId);
+            prevLevelRef.current = init.activePet.level;
+          }
+          
+          setIsInitialized(true);
+          return;
+        }
+
         setIsInitialized(false);
         try {
           const res = await fetch(`/api/pets?userId=${user.id}&t=${Date.now()}`);

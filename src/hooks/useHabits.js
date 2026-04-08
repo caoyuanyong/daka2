@@ -17,6 +17,17 @@ export function HabitsProvider({ children }) {
   useEffect(() => {
     if (appInitialized && user?.id) {
       const loadHabitsData = async () => {
+        // Optimization: Use global initial state if available to avoid waterfall
+        if (window.__INITIAL_STATE__ && window.__INITIAL_STATE__.member?.id === user.id) {
+          const init = window.__INITIAL_STATE__;
+          setHabits(init.habits || []);
+          setRecords(init.records || []);
+          setIsInitialized(true);
+          // Clear it after first use so it doesn't stale
+          delete window.__INITIAL_STATE__;
+          return;
+        }
+
         setIsInitialized(false);
         try {
           // 1. Fetch habits and records in parallel
